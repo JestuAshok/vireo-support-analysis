@@ -1,0 +1,17 @@
+# Data exports and CSV files (read-only client data and derived tables)
+data/*.csv
+data/*.pdf
+
+# Keep summary JSON without PII and manual reviewer labels
+!data/number_summary.json
+!data/my_labels.csv
+
+# Virtual environment and scratch workspace
+.venv/
+scratch/
+
+# Python bytecode and caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd

@@ -1,0 +1,127 @@
+{
+  "headline_sentence": "Quarterly excess replacement cost: Rs 7.1\u20138.8 lakh (most likely ~Rs 7.1 lakh on replacement units only; contacts Rs 2.2 lakh and SLA credits Rs 0.26 lakh as separate labelled lines). Pulse 2 defect lots exhibit an ~0.8 CSAT gap (2.72 vs 3.52), which explains ~70% of the Oct\u2013Feb drop of 0.65.",
+  "quarter": "Q1 2026 (Jan-Mar 2026)",
+  "cost_per_replacement": {
+    "policy_cost_inr": 1820,
+    "finance_cost_inr": 2500
+  },
+  "group_a_q1_stats": {
+    "tickets": 1797,
+    "replacements": 686,
+    "replacement_rate": 0.3817473567056205
+  },
+  "baselines_sensitivity": {
+    "Other Pulse 2 lots": {
+      "baseline_rate": 0.11305297651556527,
+      "excess_replacements": 482.8438012015292,
+      "valuation_policy_1820": 878775.7181867831,
+      "valuation_finance_2500": 1207109.5030038229
+    },
+    "All other products": {
+      "baseline_rate": 0.09934676102340773,
+      "excess_replacements": 507.4738704409363,
+      "valuation_policy_1820": 923602.4442025041,
+      "valuation_finance_2500": 1268684.6761023407
+    },
+    "Pulse 2 tickets pre-Oct 2025": {
+      "baseline_rate": 0.08609271523178808,
+      "excess_replacements": 531.2913907284768,
+      "valuation_policy_1820": 966950.3311258279,
+      "valuation_finance_2500": 1328228.476821192
+    }
+  },
+  "extra_contacts": {
+    "baseline_contact_rate": 0.7202989771833203,
+    "lifecycle_defect_orders": 1979,
+    "lifecycle_expected_contacts": 1425.4716758457907,
+    "lifecycle_actual_contacts": 2571,
+    "lifecycle_excess_contacts": 1145.5283241542093,
+    "q1_allocated_excess_contacts": 800.666821666711,
+    "weighted_cost_per_contact": 274.4462993878687,
+    "extra_contacts_cost_q1_inr": 219740.04624907544,
+    "extra_contacts_cost_lifecycle_inr": 314386.0094081096
+  },
+  "sla_breach_credits_q1": {
+    "attributable_breaches": 73.46369527034815,
+    "attributable_breach_credits_inr": 25712.293344621852,
+    "total_group_a_breaches_not_attributable": 160,
+    "total_breach_credits_not_attributable_inr": 56000.0
+  },
+  "csat_decline_attribution": {
+    "oct_2025_all": 3.6019417475728157,
+    "feb_2026_all": 2.9481037924151696,
+    "drop_all": 0.6538379551576461,
+    "oct_2025_excl_a": 3.603896103896104,
+    "feb_2026_excl_a": 3.409090909090909,
+    "drop_excl_a": 0.19480519480519476,
+    "pct_drop_explained_by_group_a": 70.20589073049062
+  },
+  "lot_alerts": {
+    "PL2-2510": {
+      "alert_week": "2025-11-10/2025-11-16",
+      "repl_through_alert_week": 6,
+      "repl_after_alert_week": 379,
+      "total_replacements": 385,
+      "units_ordered_after_alert_week": 679,
+      "expected_repl_on_post_alert_orders": 257.8057199211045
+    },
+    "PL2-2511": {
+      "alert_week": "2025-12-29/2026-01-04",
+      "repl_through_alert_week": 28,
+      "repl_after_alert_week": 316,
+      "total_replacements": 344,
+      "units_ordered_after_alert_week": 425,
+      "expected_repl_on_post_alert_orders": 163.35195530726256
+    },
+    "PL2-2512": {
+      "alert_week": "2026-02-23/2026-03-01",
+      "repl_through_alert_week": 71,
+      "repl_after_alert_week": 159,
+      "total_replacements": 230,
+      "units_ordered_after_alert_week": 74,
+      "expected_repl_on_post_alert_orders": 25.709969788519636
+    }
+  },
+  "false_alarms": [
+    {
+      "sku": "VA-EB-PL1",
+      "lot": "PL1-2501-3",
+      "total_tix": 26,
+      "baseline_rate": 0.11633466135458168,
+      "trigger_week": "2025-06-09/2025-06-15",
+      "trigger_rate": 0.23809523809523808
+    },
+    {
+      "sku": "VA-EB-PL1",
+      "lot": "PL1-2503-1",
+      "total_tix": 20,
+      "baseline_rate": 0.11633466135458168,
+      "trigger_week": "2026-04-27/2026-05-03",
+      "trigger_rate": 0.3
+    },
+    {
+      "sku": "VA-SW-FIT",
+      "lot": "FIT-2511-3",
+      "total_tix": 21,
+      "baseline_rate": 0.09747899159663866,
+      "trigger_week": "2026-05-11/2026-05-17",
+      "trigger_rate": 0.2
+    },
+    {
+      "sku": "VA-SW-NX2",
+      "lot": "NX2-2508-2",
+      "total_tix": 24,
+      "baseline_rate": 0.0964660936007641,
+      "trigger_week": "2026-04-06/2026-04-12",
+      "trigger_rate": 0.20833333333333334
+    },
+    {
+      "sku": "VA-SW-NX2",
+      "lot": "NX2-2601-2",
+      "total_tix": 25,
+      "baseline_rate": 0.0964660936007641,
+      "trigger_week": "2026-04-27/2026-05-03",
+      "trigger_rate": 0.2
+    }
+  ]
+}

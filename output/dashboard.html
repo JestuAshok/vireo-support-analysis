@@ -1,0 +1,2110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vireo Customer Support Ticket Analysis: Root Cause & Operations Dashboard</title>
+    <style>
+        :root {
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --rose: #e11d48;
+            --rose-bg: #fff1f2;
+            --emerald: #059669;
+            --emerald-bg: #ecfdf5;
+            --amber: #d97706;
+            --amber-bg: #fffbeb;
+            --slate-100: #f1f5f9;
+            --slate-200: #e2e8f0;
+            --slate-800: #1e293b;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding: 24px;
+        }
+        
+        .container {
+            max-width: 1240px;
+            margin: 0 auto;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #ffffff;
+            padding: 32px 36px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+        }
+        
+        .header h1 {
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+        }
+        
+        .header .subtitle {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+        
+        /* Cards & Grid */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .headline-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+        
+        .stat-box {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px 20px;
+        }
+        
+        .stat-box.highlight {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
+        }
+        
+        .stat-sub {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        
+        /* Tables */
+        .table-responsive {
+            overflow-x: auto;
+            margin-top: 12px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: left;
+        }
+        
+        th {
+            background: #f1f5f9;
+            color: #475569;
+            font-weight: 600;
+            padding: 10px 14px;
+            border-bottom: 2px solid var(--border-color);
+            white-space: nowrap;
+        }
+        
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+        
+        tr:hover td {
+            background-color: #f8fafc;
+        }
+        
+        tr.greyed-out td {
+            opacity: 0.45;
+            background-color: #f1f5f9;
+        }
+        
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+        .font-bold { font-weight: 700; }
+        
+        .ci-range {
+            color: #64748b;
+            font-size: 11px;
+            font-family: ui-monospace, SFMono-Regular, monospace;
+        }
+        
+        .sub-note {
+            font-size: 11px;
+            font-weight: normal;
+        }
+        
+        .text-amber { color: var(--amber); }
+        .text-rose { color: var(--rose); }
+        .text-emerald { color: var(--emerald); }
+        
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .agent-badge {
+            background: #e2e8f0;
+            color: #334155;
+            font-family: monospace;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        
+        .shift-day { background: #e0f2fe; color: #0369a1; }
+        .shift-morning { background: #fef3c7; color: #b45309; }
+        .shift-night { background: #f3e8ff; color: #6b21a8; }
+        
+        /* Notice Callouts */
+        .callout-box {
+            background: #eff6ff;
+            border-left: 4px solid var(--primary);
+            padding: 14px 18px;
+            border-radius: 0 8px 8px 0;
+            margin: 16px 0;
+            font-size: 13.5px;
+            color: #1e3a8a;
+            line-height: 1.5;
+        }
+        
+        .callout-box strong {
+            color: #172554;
+        }
+        
+        .section-header-block {
+            background: #f8fafc;
+            border-left: 4px solid #64748b;
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #334155;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 20px;
+            margin-bottom: 8px;
+        }
+        
+        /* Chart SVG */
+        .chart-container {
+            width: 100%;
+            margin: 16px 0;
+        }
+        
+        .chart-svg {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        /* Pending box */
+        .pending-card {
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 18px 22px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 12px;
+        }
+        
+        .pending-badge {
+            background: #f1f5f9;
+            color: #64748b;
+            font-weight: 700;
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+        }
+        
+        /* Limitations Footer */
+        .limitations-list {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 14px;
+            margin-top: 12px;
+        }
+        
+        .limitations-item {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 14px 16px;
+            font-size: 13px;
+        }
+        
+        .limitations-item strong {
+            display: block;
+            margin-bottom: 4px;
+            color: var(--text-main);
+        }
+        
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 32px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Header -->
+    <header class="header">
+        <h1>Vireo Support-Ticket Root-Cause & Operations Dashboard</h1>
+        <div class="subtitle">Comprehensive Analysis of Customer Satisfaction (CSAT) Decline, Hardware Defect Attribution, and Operational Benchmarks</div>
+    </header>
+
+    <!-- SECTION 1: Headline & Business Goal -->
+    <section class="card">
+        <div class="card-title">
+            <span>1. Executive Headline & Business Numbers</span>
+            <span class="badge" style="background:#dcfce7; color:#15803d;">Q1 2026 Focus</span>
+        </div>
+        
+        <p style="font-size: 15px; color: #334155; margin-bottom: 12px;">
+            Analysis confirms that Vireo's company-wide customer satisfaction decline is localized to three manufacturing defect lots of <strong>Pulse 2</strong> (<code>PL2-2510</code>, <code>PL2-2511</code>, and <code>PL2-2512</code>).
+            Pulse 2 defect lots exhibit an <strong>~0.8 CSAT gap (2.72 vs. 3.52)</strong> against non-defect Pulse 2, which <strong>explains ~70% of the company-wide Oct 2025 – Feb 2026 CSAT drop of 0.65 points</strong>.
+        </p>
+
+        <div class="stat-box highlight" style="margin-bottom: 16px;">
+            <div class="stat-label">One-Line Business Goal & Strategic Target</div>
+            <div style="font-size: 17px; font-weight: 700; color: #166534;">
+                &ldquo;Quarterly excess replacement cost: Rs 7.1&ndash;8.8 lakh (most likely ~Rs 7.1 lakh on replacement units only; contacts Rs 2.2 lakh and SLA credits Rs 0.26 lakh as separate labelled lines).&rdquo;
+            </div>
+            <div class="stat-sub" style="color: #15803d; font-size: 13px; margin-top: 4px;">
+                Direct target: Cut Pulse 2 defect replacement rate from 38.2% down to the baseline 11.3%.
+            </div>
+        </div>
+
+        <div class="headline-grid">
+            <div class="stat-box">
+                <div class="stat-label">Replacement Units Cost (Q1 Range)</div>
+                <div class="stat-value text-rose">Rs 7.1 &ndash; 8.8 Lakh</div>
+                <div class="stat-sub">
+                    <strong>Most likely: ~Rs 7.1 Lakh</strong> (Helpdesk baseline, Flag OR Text: 392 units @ Rs 1,820)<br>
+                    Structured flag baseline: Rs 8.7 &ndash; 8.8 Lakh (476 &ndash; 483 units)
+                </div>
+            </div>
+            
+            <div class="stat-box">
+                <div class="stat-label">Extra Inbound Contacts (Q1)</div>
+                <div class="stat-value" style="color: #0369a1;">Rs 2.20 Lakh</div>
+                <div class="stat-sub">
+                    <strong>800.7 excess contacts</strong> in Q1 2026<br>
+                    Weighted contact cost @ Rs 274.45 / ticket<br>
+                    (Full lifecycle: 1,145.5 excess contacts = Rs 3.14 Lakh)
+                </div>
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-label">Attributable SLA Breach Credits</div>
+                <div class="stat-value" style="color: #b45309;">Rs 0.26 Lakh</div>
+                <div class="stat-sub">
+                    <strong>73.5 attributable breaches</strong> in Q1 @ Rs 350 credit<br>
+                    (Total Group a breaches in Q1: 160 breaches = Rs 0.56 Lakh)
+                </div>
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-label">Total Attributable Cost (Q1)</div>
+                <div class="stat-value" style="color: #0f172a;">Rs 9.6 &ndash; 11.2 Lakh</div>
+                <div class="stat-sub">
+                    Sum of replacement units (Rs 7.1&ndash;8.8L) + extra contacts (Rs 2.2L) + SLA penalties (Rs 0.26L).
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 2: Monthly CSAT Trend -->
+    <section class="card">
+        <div class="card-title">
+            <span>2. Monthly CSAT: All Tickets vs. Excluding Defective Lots (Sep 2025 &ndash; Jun 2026)</span>
+            <span class="badge" style="background:#eff6ff; color:#1d4ed8;">Time-Series Analysis</span>
+        </div>
+        
+        <p style="font-size: 13.5px; color: #475569;">
+            When defect lots <code>PL2-2510</code>, <code>PL2-2511</code>, and <code>PL2-2512</code> are excluded, CSAT remains stable above <strong>3.40 throughout the entire crisis period</strong>, showing that broader customer operations remained resilient.
+        </p>
+
+        <div class="chart-container">
+            
+    <svg viewBox="0 0 800 340" class="chart-svg" xmlns="http://www.w3.org/2000/svg">
+        <!-- Background -->
+        <rect width="800" height="340" fill="#f8fafc" rx="8" />
+        
+        <!-- Grid & Ticks -->
+        <line x1="60" y1="280.0" x2="760" y2="280.0" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4" /><text x="48" y="284.0" font-size="11" fill="#64748b" text-anchor="end" font-family="system-ui, sans-serif">2.6</text><line x1="60" y1="240.0" x2="760" y2="240.0" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4" /><text x="48" y="244.0" font-size="11" fill="#64748b" text-anchor="end" font-family="system-ui, sans-serif">2.8</text><line x1="60" y1="200.0" x2="760" y2="200.0" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4" /><text x="48" y="204.0" font-size="11" fill="#64748b" text-anchor="end" font-family="system-ui, sans-serif">3.0</text><line x1="60" y1="160.0" x2="760" y2="160.0" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4" /><text x="48" y="164.0" font-size="11" fill="#64748b" text-anchor="end" font-family="system-ui, sans-serif">3.2</text><line x1="60" y1="120.0" x2="760" y2="120.0" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4" /><text x="48" y="124.0" font-size="11" fill="#64748b" text-anchor="end" font-family="system-ui, sans-serif">3.4</text><line x1="60" y1="80.0" x2="760" y2="80.0" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4" /><text x="48" y="84.0" font-size="11" fill="#64748b" text-anchor="end" font-family="system-ui, sans-serif">3.6</text><line x1="60" y1="40.0" x2="760" y2="40.0" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4" /><text x="48" y="44.0" font-size="11" fill="#64748b" text-anchor="end" font-family="system-ui, sans-serif">3.8</text>
+        <text x="60.0" y="302" font-size="11" fill="#64748b" text-anchor="middle" font-family="system-ui, sans-serif">2025-09</text><text x="137.8" y="302" font-size="11" fill="#64748b" text-anchor="middle" font-family="system-ui, sans-serif">2025-10</text><text x="215.6" y="302" font-size="11" fill="#64748b" text-anchor="middle" font-family="system-ui, sans-serif">2025-11</text><text x="293.3" y="302" font-size="11" fill="#64748b" text-anchor="middle" font-family="system-ui, sans-serif">2025-12</text><text x="371.1" y="302" font-size="11" fill="#64748b" text-anchor="middle" font-family="system-ui, sans-serif">2026-01</text><text x="448.9" y="302" font-size="11" fill="#64748b" text-anchor="middle" font-family="system-ui, sans-serif">2026-02</text><text x="526.7" y="302" font-size="11" fill="#64748b" text-anchor="middle" font-family="system-ui, sans-serif">2026-03</text><text x="604.4" y="302" font-size="11" fill="#64748b" text-anchor="middle" font-family="system-ui, sans-serif">2026-04</text><text x="682.2" y="302" font-size="11" fill="#64748b" text-anchor="middle" font-family="system-ui, sans-serif">2026-05</text><text x="760.0" y="302" font-size="11" fill="#64748b" text-anchor="middle" font-family="system-ui, sans-serif">2026-06</text>
+        
+        <!-- Baseline axes -->
+        <line x1="60" y1="280" x2="760" y2="280" stroke="#cbd5e1" stroke-width="1.5" />
+        <line x1="60" y1="40" x2="60" y2="280" stroke="#cbd5e1" stroke-width="1.5" />
+        
+        <!-- Lines -->
+        <path d="M 60.0,116.0 L 137.8,79.6 L 215.6,105.1 L 293.3,141.9 L 371.1,175.2 L 448.9,210.4 L 526.7,173.4 L 604.4,154.7 L 682.2,125.6 L 760.0,119.7" fill="none" stroke="#e11d48" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M 60.0,115.7 L 137.8,79.2 L 215.6,93.8 L 293.3,107.9 L 371.1,103.2 L 448.9,118.2 L 526.7,96.3 L 604.4,101.2 L 682.2,116.6 L 760.0,114.5" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6,3" />
+        
+        <!-- Points -->
+        <circle cx="60.0" cy="116.0" r="4.5" fill="#e11d48" stroke="#ffffff" stroke-width="2" /><circle cx="137.8" cy="79.6" r="4.5" fill="#e11d48" stroke="#ffffff" stroke-width="2" /><circle cx="215.6" cy="105.1" r="4.5" fill="#e11d48" stroke="#ffffff" stroke-width="2" /><circle cx="293.3" cy="141.9" r="4.5" fill="#e11d48" stroke="#ffffff" stroke-width="2" /><circle cx="371.1" cy="175.2" r="4.5" fill="#e11d48" stroke="#ffffff" stroke-width="2" /><circle cx="448.9" cy="210.4" r="4.5" fill="#e11d48" stroke="#ffffff" stroke-width="2" /><circle cx="526.7" cy="173.4" r="4.5" fill="#e11d48" stroke="#ffffff" stroke-width="2" /><circle cx="604.4" cy="154.7" r="4.5" fill="#e11d48" stroke="#ffffff" stroke-width="2" /><circle cx="682.2" cy="125.6" r="4.5" fill="#e11d48" stroke="#ffffff" stroke-width="2" /><circle cx="760.0" cy="119.7" r="4.5" fill="#e11d48" stroke="#ffffff" stroke-width="2" />
+        <circle cx="60.0" cy="115.7" r="4.5" fill="#2563eb" stroke="#ffffff" stroke-width="2" /><circle cx="137.8" cy="79.2" r="4.5" fill="#2563eb" stroke="#ffffff" stroke-width="2" /><circle cx="215.6" cy="93.8" r="4.5" fill="#2563eb" stroke="#ffffff" stroke-width="2" /><circle cx="293.3" cy="107.9" r="4.5" fill="#2563eb" stroke="#ffffff" stroke-width="2" /><circle cx="371.1" cy="103.2" r="4.5" fill="#2563eb" stroke="#ffffff" stroke-width="2" /><circle cx="448.9" cy="118.2" r="4.5" fill="#2563eb" stroke="#ffffff" stroke-width="2" /><circle cx="526.7" cy="96.3" r="4.5" fill="#2563eb" stroke="#ffffff" stroke-width="2" /><circle cx="604.4" cy="101.2" r="4.5" fill="#2563eb" stroke="#ffffff" stroke-width="2" /><circle cx="682.2" cy="116.6" r="4.5" fill="#2563eb" stroke="#ffffff" stroke-width="2" /><circle cx="760.0" cy="114.5" r="4.5" fill="#2563eb" stroke="#ffffff" stroke-width="2" />
+        
+        <!-- Legend -->
+        <g transform="translate(70, 20)">
+            <rect x="0" y="0" width="14" height="4" fill="#e11d48" rx="2" />
+            <circle cx="7" cy="2" r="3" fill="#e11d48" />
+            <text x="20" y="5" font-size="11" font-weight="600" fill="#0f172a" font-family="system-ui, sans-serif">All Tickets (Actual CSAT)</text>
+            
+            <rect x="220" y="0" width="14" height="4" fill="#2563eb" rx="2" />
+            <circle cx="227" cy="2" r="3" fill="#2563eb" />
+            <text x="240" y="5" font-size="11" font-weight="600" fill="#0f172a" font-family="system-ui, sans-serif">Excluding Pulse 2 Defect Lots [PL2-2510, 2511, 2512]</text>
+        </g>
+    </svg>
+    
+        </div>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th class="text-right">All Tickets CSAT</th>
+                        <th class="text-right">All Tickets (n Tix, n CSAT)</th>
+                        <th class="text-right">Excl. Defect Lots CSAT</th>
+                        <th class="text-right">Excl. Lots (n Tix, n CSAT)</th>
+                        <th class="text-right">Delta</th>
+                        <th class="text-right">Group (a) Defect Tix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                
+                    <tr>
+                        <td class="font-mono font-bold">2025-09</td>
+                        <td class="text-right font-mono font-bold" style="color:#e11d48;">3.42</td>
+                        <td class="text-right font-mono text-muted">582 tix (262 csat)</td>
+                        <td class="text-right font-mono font-bold" style="color:#2563eb;">3.42</td>
+                        <td class="text-right font-mono text-muted">581 tix (261 csat)</td>
+                        <td class="text-right font-mono" style="color:#64748b;">-0.00</td>
+                        <td class="text-right font-mono">1</td>
+                    </tr>
+                
+                    <tr>
+                        <td class="font-mono font-bold">2025-10</td>
+                        <td class="text-right font-mono font-bold" style="color:#e11d48;">3.60</td>
+                        <td class="text-right font-mono text-muted">659 tix (309 csat)</td>
+                        <td class="text-right font-mono font-bold" style="color:#2563eb;">3.60</td>
+                        <td class="text-right font-mono text-muted">656 tix (308 csat)</td>
+                        <td class="text-right font-mono" style="color:#64748b;">-0.00</td>
+                        <td class="text-right font-mono">3</td>
+                    </tr>
+                
+                    <tr>
+                        <td class="font-mono font-bold">2025-11</td>
+                        <td class="text-right font-mono font-bold" style="color:#e11d48;">3.47</td>
+                        <td class="text-right font-mono text-muted">824 tix (371 csat)</td>
+                        <td class="text-right font-mono font-bold" style="color:#2563eb;">3.53</td>
+                        <td class="text-right font-mono text-muted">743 tix (341 csat)</td>
+                        <td class="text-right font-mono" style="color:#64748b;">-0.06</td>
+                        <td class="text-right font-mono">81</td>
+                    </tr>
+                
+                    <tr>
+                        <td class="font-mono font-bold">2025-12</td>
+                        <td class="text-right font-mono font-bold" style="color:#e11d48;">3.29</td>
+                        <td class="text-right font-mono text-muted">1,034 tix (465 csat)</td>
+                        <td class="text-right font-mono font-bold" style="color:#2563eb;">3.46</td>
+                        <td class="text-right font-mono text-muted">731 tix (328 csat)</td>
+                        <td class="text-right font-mono" style="color:#e11d48;">-0.17</td>
+                        <td class="text-right font-mono">303</td>
+                    </tr>
+                
+                    <tr>
+                        <td class="font-mono font-bold">2026-01</td>
+                        <td class="text-right font-mono font-bold" style="color:#e11d48;">3.12</td>
+                        <td class="text-right font-mono text-muted">1,174 tix (517 csat)</td>
+                        <td class="text-right font-mono font-bold" style="color:#2563eb;">3.48</td>
+                        <td class="text-right font-mono text-muted">557 tix (248 csat)</td>
+                        <td class="text-right font-mono" style="color:#e11d48;">-0.36</td>
+                        <td class="text-right font-mono">617</td>
+                    </tr>
+                
+                    <tr>
+                        <td class="font-mono font-bold">2026-02</td>
+                        <td class="text-right font-mono font-bold" style="color:#e11d48;">2.95</td>
+                        <td class="text-right font-mono text-muted">1,196 tix (501 csat)</td>
+                        <td class="text-right font-mono font-bold" style="color:#2563eb;">3.41</td>
+                        <td class="text-right font-mono text-muted">490 tix (198 csat)</td>
+                        <td class="text-right font-mono" style="color:#e11d48;">-0.46</td>
+                        <td class="text-right font-mono">706</td>
+                    </tr>
+                
+                    <tr>
+                        <td class="font-mono font-bold">2026-03</td>
+                        <td class="text-right font-mono font-bold" style="color:#e11d48;">3.13</td>
+                        <td class="text-right font-mono text-muted">1,072 tix (481 csat)</td>
+                        <td class="text-right font-mono font-bold" style="color:#2563eb;">3.52</td>
+                        <td class="text-right font-mono text-muted">598 tix (270 csat)</td>
+                        <td class="text-right font-mono" style="color:#e11d48;">-0.39</td>
+                        <td class="text-right font-mono">474</td>
+                    </tr>
+                
+                    <tr>
+                        <td class="font-mono font-bold">2026-04</td>
+                        <td class="text-right font-mono font-bold" style="color:#e11d48;">3.23</td>
+                        <td class="text-right font-mono text-muted">788 tix (344 csat)</td>
+                        <td class="text-right font-mono font-bold" style="color:#2563eb;">3.49</td>
+                        <td class="text-right font-mono text-muted">551 tix (255 csat)</td>
+                        <td class="text-right font-mono" style="color:#e11d48;">-0.27</td>
+                        <td class="text-right font-mono">237</td>
+                    </tr>
+                
+                    <tr>
+                        <td class="font-mono font-bold">2026-05</td>
+                        <td class="text-right font-mono font-bold" style="color:#e11d48;">3.37</td>
+                        <td class="text-right font-mono text-muted">693 tix (293 csat)</td>
+                        <td class="text-right font-mono font-bold" style="color:#2563eb;">3.42</td>
+                        <td class="text-right font-mono text-muted">592 tix (259 csat)</td>
+                        <td class="text-right font-mono" style="color:#64748b;">-0.04</td>
+                        <td class="text-right font-mono">101</td>
+                    </tr>
+                
+                    <tr>
+                        <td class="font-mono font-bold">2026-06</td>
+                        <td class="text-right font-mono font-bold" style="color:#e11d48;">3.40</td>
+                        <td class="text-right font-mono text-muted">586 tix (264 csat)</td>
+                        <td class="text-right font-mono font-bold" style="color:#2563eb;">3.43</td>
+                        <td class="text-right font-mono text-muted">546 tix (248 csat)</td>
+                        <td class="text-right font-mono" style="color:#64748b;">-0.03</td>
+                        <td class="text-right font-mono">40</td>
+                    </tr>
+                
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- SECTION 3: Agent Performance Table -->
+    <section class="card">
+        <div class="card-title">
+            <span>3. Agent Performance &amp; Case-Mix Benchmark Evaluation (All 44 Agents)</span>
+            <span class="badge" style="background:#f1f5f9; color:#475569;">Sorted by Agent ID strictly</span>
+        </div>
+
+        <div class="callout-box">
+            <strong>Critical Methodological Notice:</strong>
+            Individual ranks cannot reliably identify who needs training. Within their own teams, 1 of 30 agents differs from the team mean (1.5 expected by chance). The raw bottom ten sits almost entirely in Logistics, Returns and Billing (10/10 and 9/10). Bottom-ten persistence is 8/10 raw and 6/10 adjusted (4/10 vs 2.9 chance before excluding agents with &lt;30 responses per half), versus 4.5 expected by chance on 22 qualified agents: weak evidence of a small persistent effect.
+            <div style="margin-top: 8px; font-size: 13px; color: #1e3a8a;">
+                Note on split-half reliability (<em>r</em> = 0.456): this correlation was computed across teams, so it includes consistent team differences. Agents A3028 (Vivaan Pandey) and A3029 (Kavya Pandey) are indistinguishable from Logistics peers; the team as a whole scores lower after adjustment (3.32 vs Chat 3.46), which is a queue/process effect.
+            </div>
+        </div>
+
+        <!-- Raw Bottom-10 Queue Assignment Breakdown (Item 1 Table) -->
+        <div style="margin: 20px 0 24px 0;">
+            <h4 style="font-size: 14px; font-weight: 700; color: #334155; margin-bottom: 6px;">
+                Queue Breakdown: Raw Bottom-10 Agents in Half 1 vs. Half 2
+            </h4>
+            <p style="font-size: 12.5px; color: #64748b; margin-bottom: 10px;">
+                Demonstrates that low raw CSAT is driven by queue placement in dispute-heavy departments: <strong>10 / 10 agents in Half 1</strong> and <strong>9 / 10 agents in Half 2</strong> belong to Logistics, Returns Desk, or Billing (where 89%–97% of tickets are delivery, refund, or billing disputes).
+            </p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(540px, 1fr)); gap: 16px;">
+                <div>
+                    <div style="font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 6px;">
+                        Half 1: Jan &ndash; Sep 2025 (10 / 10 in Logistics, Returns, or Billing)
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Agent ID</th>
+                                    <th>Team</th>
+                                    <th>Shift</th>
+                                    <th>Site</th>
+                                    <th class="text-right">n CSAT</th>
+                                    <th class="text-right">Raw CSAT</th>
+                                    <th class="text-right">Grp (a) %</th>
+                                    <th class="text-right">Delivery/Billing/Returns %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                
+            <tr>
+                <td class="font-mono font-bold">A3028</td>
+                <td>Logistics</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td>Bengaluru</td>
+                <td class="text-right font-mono">57</td>
+                <td class="text-right font-mono font-bold" style="color:#e11d48;">3.05</td>
+                <td class="text-right font-mono">0.0%</td>
+                <td class="text-right font-mono font-bold">93.4%</td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono font-bold">A3030</td>
+                <td>Logistics</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td>Bengaluru</td>
+                <td class="text-right font-mono">56</td>
+                <td class="text-right font-mono font-bold" style="color:#e11d48;">3.09</td>
+                <td class="text-right font-mono">0.8%</td>
+                <td class="text-right font-mono font-bold">96.8%</td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono font-bold">A3029</td>
+                <td>Logistics</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td>Bengaluru</td>
+                <td class="text-right font-mono">66</td>
+                <td class="text-right font-mono font-bold" style="color:#e11d48;">3.09</td>
+                <td class="text-right font-mono">0.0%</td>
+                <td class="text-right font-mono font-bold">96.9%</td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono font-bold">A3037</td>
+                <td>Returns Desk</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td>Indore</td>
+                <td class="text-right font-mono">88</td>
+                <td class="text-right font-mono font-bold" style="color:#e11d48;">3.19</td>
+                <td class="text-right font-mono">0.0%</td>
+                <td class="text-right font-mono font-bold">95.9%</td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono font-bold">A3038</td>
+                <td>Returns Desk</td>
+                <td><span class="badge shift-day">Day</span></td>
+                <td>Bengaluru</td>
+                <td class="text-right font-mono">45</td>
+                <td class="text-right font-mono font-bold" style="color:#e11d48;">3.29</td>
+                <td class="text-right font-mono">0.0%</td>
+                <td class="text-right font-mono font-bold">90.4%</td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono font-bold">A3034</td>
+                <td>Billing</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td>Bengaluru</td>
+                <td class="text-right font-mono">59</td>
+                <td class="text-right font-mono font-bold" style="color:#e11d48;">3.32</td>
+                <td class="text-right font-mono">0.8%</td>
+                <td class="text-right font-mono font-bold">92.9%</td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono font-bold">A3027</td>
+                <td>Logistics</td>
+                <td><span class="badge shift-day">Day</span></td>
+                <td>Bengaluru</td>
+                <td class="text-right font-mono">80</td>
+                <td class="text-right font-mono font-bold" style="color:#e11d48;">3.33</td>
+                <td class="text-right font-mono">0.0%</td>
+                <td class="text-right font-mono font-bold">95.3%</td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono font-bold">A3036</td>
+                <td>Returns Desk</td>
+                <td><span class="badge shift-day">Day</span></td>
+                <td>Indore</td>
+                <td class="text-right font-mono">35</td>
+                <td class="text-right font-mono font-bold" style="color:#e11d48;">3.37</td>
+                <td class="text-right font-mono">0.0%</td>
+                <td class="text-right font-mono font-bold">89.0%</td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono font-bold">A3032</td>
+                <td>Billing</td>
+                <td><span class="badge shift-day">Day</span></td>
+                <td>Bengaluru</td>
+                <td class="text-right font-mono">60</td>
+                <td class="text-right font-mono font-bold" style="color:#e11d48;">3.38</td>
+                <td class="text-right font-mono">0.0%</td>
+                <td class="text-right font-mono font-bold">96.1%</td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono font-bold">A3035</td>
+                <td>Billing</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td>Bengaluru</td>
+                <td class="text-right font-mono">73</td>
+                <td class="text-right font-mono font-bold" style="color:#e11d48;">3.38</td>
+                <td class="text-right font-mono">0.0%</td>
+                <td class="text-right font-mono font-bold">91.9%</td>
+            </tr>
+            
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 6px;">
+                        Half 2: Oct 2025 &ndash; Jun 2026 (9 / 10 in Logistics, Returns, or Billing)
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Agent ID</th>
+                                    <th>Team</th>
+                                    <th>Shift</th>
+                                    <th>Site</th>
+                                    <th class="text-right">n CSAT</th>
+                                    <th class="text-right">Raw CSAT</th>
+                                    <th class="text-right">Grp (a) %</th>
+                                    <th class="text-right">Delivery/Billing/Returns %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                
+            <tr>
+                <td class="font-mono font-bold">A3029</td>
+                <td>Logistics</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td>Bengaluru</td>
+                <td class="text-right font-mono">93</td>
+                <td class="text-right font-mono font-bold" style="color:#e11d48;">3.15</td>
+                <td class="text-right font-mono">23.2%</td>
+                <td class="text-right font-mono font-bold">94.3%</td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono font-bold">A3038</td>
+                <td>Returns Desk</td>
+                <td><span class="badge shift-day">Day</span></td>
+                <td>Bengaluru</td>
+                <td class="text-right font-mono">75</td>
+                <td class="text-right font-mono font-bold" style="color:#e11d48;">3.16</td>
+                <td class="text-right font-mono">21.0%</td>
+                <td class="text-right font-mono font-bold">88.7%</td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono font-bold">A3028</td>
+                <td>Logistics</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td>Bengaluru</td>
+                <td class="text-right font-mono">96</td>
+                <td class="text-right font-mono font-bold" style="color:#e11d48;">3.19</td>
+                <td class="text-right font-mono">19.0%</td>
+                <td class="text-right font-mono font-bold">96.7%</td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono font-bold">A3030</td>
+                <td>Logistics</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td>Bengaluru</td>
+                <td class="text-right font-mono">93</td>
+                <td class="text-right font-mono font-bold" style="color:#e11d48;">3.25</td>
+                <td class="text-right font-mono">24.6%</td>
+                <td class="text-right font-mono font-bold">94.8%</td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono font-bold">A3036</td>
+                <td>Returns Desk</td>
+                <td><span class="badge shift-day">Day</span></td>
+                <td>Indore</td>
+                <td class="text-right font-mono">71</td>
+                <td class="text-right font-mono font-bold" style="color:#e11d48;">3.25</td>
+                <td class="text-right font-mono">28.6%</td>
+                <td class="text-right font-mono font-bold">89.7%</td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono font-bold">A3031</td>
+                <td>Logistics</td>
+                <td><span class="badge shift-day">Day</span></td>
+                <td>Bengaluru</td>
+                <td class="text-right font-mono">154</td>
+                <td class="text-right font-mono font-bold" style="color:#e11d48;">3.27</td>
+                <td class="text-right font-mono">19.9%</td>
+                <td class="text-right font-mono font-bold">96.7%</td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono font-bold">A3027</td>
+                <td>Logistics</td>
+                <td><span class="badge shift-day">Day</span></td>
+                <td>Bengaluru</td>
+                <td class="text-right font-mono">130</td>
+                <td class="text-right font-mono font-bold" style="color:#e11d48;">3.30</td>
+                <td class="text-right font-mono">22.9%</td>
+                <td class="text-right font-mono font-bold">92.7%</td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono font-bold">A3037</td>
+                <td>Returns Desk</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td>Indore</td>
+                <td class="text-right font-mono">155</td>
+                <td class="text-right font-mono font-bold" style="color:#e11d48;">3.33</td>
+                <td class="text-right font-mono">24.0%</td>
+                <td class="text-right font-mono font-bold">94.3%</td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono font-bold">A3026</td>
+                <td>Voice Frontline</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td>Indore</td>
+                <td class="text-right font-mono">24</td>
+                <td class="text-right font-mono font-bold" style="color:#e11d48;">3.42</td>
+                <td class="text-right font-mono">17.5%</td>
+                <td class="text-right font-mono font-bold">0.0%</td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono font-bold">A3032</td>
+                <td>Billing</td>
+                <td><span class="badge shift-day">Day</span></td>
+                <td>Bengaluru</td>
+                <td class="text-right font-mono">107</td>
+                <td class="text-right font-mono font-bold" style="color:#e11d48;">3.44</td>
+                <td class="text-right font-mono">21.1%</td>
+                <td class="text-right font-mono font-bold">92.5%</td>
+            </tr>
+            
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Within-Team Benchmarks Table (3+ Agents Teams) -->
+        <div style="margin: 24px 0 28px 0;">
+            <h4 style="font-size: 14px; font-weight: 700; color: #334155; margin-bottom: 6px;">
+                Within-Team Benchmarks: Standard Teams with 3+ Agents
+            </h4>
+            <p style="font-size: 12.5px; color: #64748b; margin-bottom: 12px;">
+                Testing each agent against their own team's mean CSAT. Across all 30 agents across these 5 teams, only 1 of 30 agents differs from the team mean (1.5 expected by chance at &alpha; = 0.05). Notably, <strong>A3028 and A3029</strong> are indistinguishable from Logistics peers; the team as a whole scores lower after adjustment (3.32 vs Chat 3.46), which is a queue/process effect.
+            </p>
+            
+        <div style="margin-bottom: 16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:8px 12px; border-radius:6px 6px 0 0; border:1px solid #e2e8f0; border-bottom:none;">
+                <span style="font-weight:700; color:#334155; font-size:12.5px;">Team: Logistics (5 agents)</span>
+                <span style="font-size:12px; color:#64748b;">Team Means: Raw <strong>3.23</strong> | Adjusted <strong>3.32</strong> (Expected by chance: 0.25 agents)</span>
+            </div>
+            <div class="table-responsive" style="margin-top:0;">
+                <table style="border:1px solid #e2e8f0;">
+                    <thead>
+                        <tr>
+                            <th>Agent ID</th>
+                            <th>Name</th>
+                            <th class="text-right">n CSAT</th>
+                            <th class="text-right">Raw CSAT [95% CI]</th>
+                            <th class="text-right">Mix-Adjusted CSAT [95% CI]</th>
+                            <th class="text-center">Adj CI Excludes Team Mean?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+            <tr>
+                <td class="font-mono"><strong>A3027</strong></td>
+                <td>Harpreet Goyal</td>
+                <td class="text-right font-mono">210</td>
+                <td class="text-right">3.31 <span class='ci-range'>[3.17, 3.43]</span></td>
+                <td class="text-right">3.42 <span class='ci-range'>[3.30, 3.55]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+            <tr style='background:#fefce8;'>
+                <td class="font-mono"><strong>A3028</strong> <span class='badge' style='background:#fef08a; color:#854d0e;'>Audit Focus</span></td>
+                <td>Vivaan Pandey</td>
+                <td class="text-right font-mono">153</td>
+                <td class="text-right">3.14 <span class='ci-range'>[2.98, 3.29]</span></td>
+                <td class="text-right">3.21 <span class='ci-range'>[3.05, 3.38]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+            <tr style='background:#fefce8;'>
+                <td class="font-mono"><strong>A3029</strong> <span class='badge' style='background:#fef08a; color:#854d0e;'>Audit Focus</span></td>
+                <td>Kavya Pandey</td>
+                <td class="text-right font-mono">159</td>
+                <td class="text-right">3.13 <span class='ci-range'>[2.97, 3.27]</span></td>
+                <td class="text-right">3.22 <span class='ci-range'>[3.06, 3.37]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono"><strong>A3030</strong></td>
+                <td>Geeta Iyer</td>
+                <td class="text-right font-mono">149</td>
+                <td class="text-right">3.19 <span class='ci-range'>[3.05, 3.32]</span></td>
+                <td class="text-right">3.30 <span class='ci-range'>[3.15, 3.46]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono"><strong>A3031</strong></td>
+                <td>Zoya Menon</td>
+                <td class="text-right font-mono">210</td>
+                <td class="text-right">3.31 <span class='ci-range'>[3.19, 3.43]</span></td>
+                <td class="text-right">3.42 <span class='ci-range'>[3.28, 3.56]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:8px 12px; border-radius:6px 6px 0 0; border:1px solid #e2e8f0; border-bottom:none;">
+                <span style="font-weight:700; color:#334155; font-size:12.5px;">Team: Returns Desk (3 agents)</span>
+                <span style="font-size:12px; color:#64748b;">Team Means: Raw <strong>3.26</strong> | Adjusted <strong>3.37</strong> (Expected by chance: 0.15 agents)</span>
+            </div>
+            <div class="table-responsive" style="margin-top:0;">
+                <table style="border:1px solid #e2e8f0;">
+                    <thead>
+                        <tr>
+                            <th>Agent ID</th>
+                            <th>Name</th>
+                            <th class="text-right">n CSAT</th>
+                            <th class="text-right">Raw CSAT [95% CI]</th>
+                            <th class="text-right">Mix-Adjusted CSAT [95% CI]</th>
+                            <th class="text-center">Adj CI Excludes Team Mean?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+            <tr>
+                <td class="font-mono"><strong>A3036</strong></td>
+                <td>Divya Tiwari</td>
+                <td class="text-right font-mono">106</td>
+                <td class="text-right">3.29 <span class='ci-range'>[3.10, 3.49]</span></td>
+                <td class="text-right">3.44 <span class='ci-range'>[3.24, 3.63]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono"><strong>A3037</strong></td>
+                <td>Mohammed Desai</td>
+                <td class="text-right font-mono">243</td>
+                <td class="text-right">3.28 <span class='ci-range'>[3.15, 3.40]</span></td>
+                <td class="text-right">3.40 <span class='ci-range'>[3.27, 3.53]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono"><strong>A3038</strong></td>
+                <td>Varun Reddy</td>
+                <td class="text-right font-mono">120</td>
+                <td class="text-right">3.21 <span class='ci-range'>[3.04, 3.37]</span></td>
+                <td class="text-right">3.28 <span class='ci-range'>[3.11, 3.45]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:8px 12px; border-radius:6px 6px 0 0; border:1px solid #e2e8f0; border-bottom:none;">
+                <span style="font-weight:700; color:#334155; font-size:12.5px;">Team: Billing (4 agents)</span>
+                <span style="font-size:12px; color:#64748b;">Team Means: Raw <strong>3.48</strong> | Adjusted <strong>3.32</strong> (Expected by chance: 0.20 agents)</span>
+            </div>
+            <div class="table-responsive" style="margin-top:0;">
+                <table style="border:1px solid #e2e8f0;">
+                    <thead>
+                        <tr>
+                            <th>Agent ID</th>
+                            <th>Name</th>
+                            <th class="text-right">n CSAT</th>
+                            <th class="text-right">Raw CSAT [95% CI]</th>
+                            <th class="text-right">Mix-Adjusted CSAT [95% CI]</th>
+                            <th class="text-center">Adj CI Excludes Team Mean?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+            <tr>
+                <td class="font-mono"><strong>A3032</strong></td>
+                <td>Kunal Jain</td>
+                <td class="text-right font-mono">167</td>
+                <td class="text-right">3.42 <span class='ci-range'>[3.26, 3.58]</span></td>
+                <td class="text-right">3.26 <span class='ci-range'>[3.11, 3.41]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono"><strong>A3033</strong></td>
+                <td>Thomas Reddy</td>
+                <td class="text-right font-mono">151</td>
+                <td class="text-right">3.65 <span class='ci-range'>[3.49, 3.80]</span></td>
+                <td class="text-right">3.50 <span class='ci-range'>[3.36, 3.65]</span></td>
+                <td class="text-center"><span class='badge' style='background:#fef2f2; color:#b91c1c;'>Differs</span></td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono"><strong>A3034</strong></td>
+                <td>Meera Pereira</td>
+                <td class="text-right font-mono">162</td>
+                <td class="text-right">3.42 <span class='ci-range'>[3.27, 3.56]</span></td>
+                <td class="text-right">3.26 <span class='ci-range'>[3.10, 3.40]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono"><strong>A3035</strong></td>
+                <td>Nisha Rao</td>
+                <td class="text-right font-mono">193</td>
+                <td class="text-right">3.44 <span class='ci-range'>[3.29, 3.60]</span></td>
+                <td class="text-right">3.28 <span class='ci-range'>[3.12, 3.42]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:8px 12px; border-radius:6px 6px 0 0; border:1px solid #e2e8f0; border-bottom:none;">
+                <span style="font-weight:700; color:#334155; font-size:12.5px;">Team: Chat Frontline (11 agents)</span>
+                <span style="font-size:12px; color:#64748b;">Team Means: Raw <strong>3.65</strong> | Adjusted <strong>3.46</strong> (Expected by chance: 0.55 agents)</span>
+            </div>
+            <div class="table-responsive" style="margin-top:0;">
+                <table style="border:1px solid #e2e8f0;">
+                    <thead>
+                        <tr>
+                            <th>Agent ID</th>
+                            <th>Name</th>
+                            <th class="text-right">n CSAT</th>
+                            <th class="text-right">Raw CSAT [95% CI]</th>
+                            <th class="text-right">Mix-Adjusted CSAT [95% CI]</th>
+                            <th class="text-center">Adj CI Excludes Team Mean?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+            <tr>
+                <td class="font-mono"><strong>A3001</strong></td>
+                <td>Reyansh Bhatt</td>
+                <td class="text-right font-mono">93</td>
+                <td class="text-right">3.65 <span class='ci-range'>[3.44, 3.86]</span></td>
+                <td class="text-right">3.49 <span class='ci-range'>[3.27, 3.72]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono"><strong>A3002</strong></td>
+                <td>Megha Sheikh</td>
+                <td class="text-right font-mono">88</td>
+                <td class="text-right">3.58 <span class='ci-range'>[3.40, 3.80]</span></td>
+                <td class="text-right">3.38 <span class='ci-range'>[3.18, 3.58]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono"><strong>A3003</strong></td>
+                <td>Deepak Saxena</td>
+                <td class="text-right font-mono">74</td>
+                <td class="text-right">3.69 <span class='ci-range'>[3.49, 3.91]</span></td>
+                <td class="text-right">3.48 <span class='ci-range'>[3.25, 3.68]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono"><strong>A3008</strong></td>
+                <td>Isha George</td>
+                <td class="text-right font-mono">107</td>
+                <td class="text-right">3.54 <span class='ci-range'>[3.36, 3.73]</span></td>
+                <td class="text-right">3.36 <span class='ci-range'>[3.20, 3.54]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono"><strong>A3009</strong></td>
+                <td>Vihaan Menon</td>
+                <td class="text-right font-mono">84</td>
+                <td class="text-right">3.64 <span class='ci-range'>[3.40, 3.87]</span></td>
+                <td class="text-right">3.55 <span class='ci-range'>[3.31, 3.77]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono"><strong>A3010</strong></td>
+                <td>Aarav Pereira</td>
+                <td class="text-right font-mono">102</td>
+                <td class="text-right">3.69 <span class='ci-range'>[3.48, 3.87]</span></td>
+                <td class="text-right">3.52 <span class='ci-range'>[3.31, 3.69]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono"><strong>A3011</strong></td>
+                <td>Divya Jadhav</td>
+                <td class="text-right font-mono">104</td>
+                <td class="text-right">3.63 <span class='ci-range'>[3.44, 3.82]</span></td>
+                <td class="text-right">3.43 <span class='ci-range'>[3.25, 3.61]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono"><strong>A3012</strong></td>
+                <td>Steven Ghosh</td>
+                <td class="text-right font-mono">83</td>
+                <td class="text-right">3.73 <span class='ci-range'>[3.49, 3.98]</span></td>
+                <td class="text-right">3.54 <span class='ci-range'>[3.30, 3.77]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono"><strong>A3013</strong></td>
+                <td>Sukhwinder Rao</td>
+                <td class="text-right font-mono">96</td>
+                <td class="text-right">3.71 <span class='ci-range'>[3.52, 3.89]</span></td>
+                <td class="text-right">3.51 <span class='ci-range'>[3.34, 3.70]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono"><strong>A3014</strong></td>
+                <td>Bhavna Joshi</td>
+                <td class="text-right font-mono">78</td>
+                <td class="text-right">3.67 <span class='ci-range'>[3.45, 3.88]</span></td>
+                <td class="text-right">3.37 <span class='ci-range'>[3.13, 3.61]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono"><strong>A3015</strong></td>
+                <td>Ishaan Dutta</td>
+                <td class="text-right font-mono">92</td>
+                <td class="text-right">3.65 <span class='ci-range'>[3.46, 3.84]</span></td>
+                <td class="text-right">3.41 <span class='ci-range'>[3.21, 3.62]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:8px 12px; border-radius:6px 6px 0 0; border:1px solid #e2e8f0; border-bottom:none;">
+                <span style="font-weight:700; color:#334155; font-size:12.5px;">Team: Email Frontline (7 agents)</span>
+                <span style="font-size:12px; color:#64748b;">Team Means: Raw <strong>3.60</strong> | Adjusted <strong>3.43</strong> (Expected by chance: 0.35 agents)</span>
+            </div>
+            <div class="table-responsive" style="margin-top:0;">
+                <table style="border:1px solid #e2e8f0;">
+                    <thead>
+                        <tr>
+                            <th>Agent ID</th>
+                            <th>Name</th>
+                            <th class="text-right">n CSAT</th>
+                            <th class="text-right">Raw CSAT [95% CI]</th>
+                            <th class="text-right">Mix-Adjusted CSAT [95% CI]</th>
+                            <th class="text-center">Adj CI Excludes Team Mean?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+            <tr>
+                <td class="font-mono"><strong>A3016</strong></td>
+                <td>Om Khanna</td>
+                <td class="text-right font-mono">106</td>
+                <td class="text-right">3.58 <span class='ci-range'>[3.40, 3.75]</span></td>
+                <td class="text-right">3.42 <span class='ci-range'>[3.25, 3.58]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono"><strong>A3017</strong></td>
+                <td>Aadhya Rao</td>
+                <td class="text-right font-mono">93</td>
+                <td class="text-right">3.51 <span class='ci-range'>[3.33, 3.69]</span></td>
+                <td class="text-right">3.34 <span class='ci-range'>[3.16, 3.52]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono"><strong>A3018</strong></td>
+                <td>Kunal Pillai</td>
+                <td class="text-right font-mono">92</td>
+                <td class="text-right">3.78 <span class='ci-range'>[3.59, 3.97]</span></td>
+                <td class="text-right">3.62 <span class='ci-range'>[3.43, 3.83]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono"><strong>A3019</strong></td>
+                <td>Sai Joshi</td>
+                <td class="text-right font-mono">125</td>
+                <td class="text-right">3.66 <span class='ci-range'>[3.51, 3.82]</span></td>
+                <td class="text-right">3.50 <span class='ci-range'>[3.36, 3.64]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono"><strong>A3020</strong></td>
+                <td>Riya Pillai</td>
+                <td class="text-right font-mono">101</td>
+                <td class="text-right">3.50 <span class='ci-range'>[3.29, 3.69]</span></td>
+                <td class="text-right">3.32 <span class='ci-range'>[3.11, 3.53]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono"><strong>A3021</strong></td>
+                <td>Geeta Sen</td>
+                <td class="text-right font-mono">113</td>
+                <td class="text-right">3.64 <span class='ci-range'>[3.45, 3.81]</span></td>
+                <td class="text-right">3.49 <span class='ci-range'>[3.31, 3.69]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+            <tr>
+                <td class="font-mono"><strong>A3022</strong></td>
+                <td>Manpreet Yadav</td>
+                <td class="text-right font-mono">97</td>
+                <td class="text-right">3.54 <span class='ci-range'>[3.36, 3.71]</span></td>
+                <td class="text-right">3.30 <span class='ci-range'>[3.11, 3.49]</span></td>
+                <td class="text-center"><span class='badge' style='background:#f0fdf4; color:#166534;'>Includes Mean</span></td>
+            </tr>
+            
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        </div>
+
+        <!-- Block 1: Tier 1 Standard Frontline -->
+        <div class="section-header-block">Block 1: Tier 1 Standard Frontline (34 Agents) &mdash; Group Mean CSAT: Raw 3.47 | Adjusted 3.39</div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Agent ID</th>
+                        <th>Agent Name</th>
+                        <th>Assigned Team</th>
+                        <th>Shift</th>
+                        <th class="text-right">n CSAT</th>
+                        <th class="text-right">Raw CSAT [95% CI]</th>
+                        <th class="text-right">Mix-Adjusted CSAT [95% CI]</th>
+                        <th class="text-right">Median Handle Time</th>
+                        <th class="text-right">SLA Breach %</th>
+                        <th class="text-right">Group (a) Share</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+            <tr class="">
+                <td class="font-mono text-bold">A3001</td>
+                <td><strong>Reyansh Bhatt</strong> <span class='agent-badge'>(A3001)</span></td>
+                <td>Chat Frontline</td>
+                <td><span class="badge shift-night">Night</span></td>
+                <td class="text-right font-mono">93</td>
+                <td class="text-right">3.65 <span class='ci-range'>[3.44, 3.86]</span></td>
+                <td class="text-right">3.49 <span class='ci-range'>[3.27, 3.72]</span></td>
+                <td class="text-right font-mono">20.0 min</td>
+                <td class="text-right font-mono">10.6%</td>
+                <td class="text-right font-mono">18.8%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3002</td>
+                <td><strong>Megha Sheikh</strong> <span class='agent-badge'>(A3002)</span></td>
+                <td>Chat Frontline</td>
+                <td><span class="badge shift-night">Night</span></td>
+                <td class="text-right font-mono">88</td>
+                <td class="text-right">3.58 <span class='ci-range'>[3.40, 3.80]</span></td>
+                <td class="text-right">3.38 <span class='ci-range'>[3.18, 3.58]</span></td>
+                <td class="text-right font-mono">22.5 min</td>
+                <td class="text-right font-mono">14.4%</td>
+                <td class="text-right font-mono">19.6%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3003</td>
+                <td><strong>Deepak Saxena</strong> <span class='agent-badge'>(A3003)</span></td>
+                <td>Chat Frontline</td>
+                <td><span class="badge shift-night">Night</span></td>
+                <td class="text-right font-mono">74</td>
+                <td class="text-right">3.69 <span class='ci-range'>[3.49, 3.91]</span></td>
+                <td class="text-right">3.48 <span class='ci-range'>[3.25, 3.68]</span></td>
+                <td class="text-right font-mono">23.0 min</td>
+                <td class="text-right font-mono">16.4%</td>
+                <td class="text-right font-mono">14.8%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3008</td>
+                <td><strong>Isha George</strong> <span class='agent-badge'>(A3008)</span></td>
+                <td>Chat Frontline</td>
+                <td><span class="badge shift-day">Day</span></td>
+                <td class="text-right font-mono">107</td>
+                <td class="text-right">3.54 <span class='ci-range'>[3.36, 3.73]</span></td>
+                <td class="text-right">3.36 <span class='ci-range'>[3.20, 3.54]</span></td>
+                <td class="text-right font-mono">23.0 min</td>
+                <td class="text-right font-mono">7.9%</td>
+                <td class="text-right font-mono">19.7%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3009</td>
+                <td><strong>Vihaan Menon</strong> <span class='agent-badge'>(A3009)</span></td>
+                <td>Chat Frontline</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td class="text-right font-mono">84</td>
+                <td class="text-right">3.64 <span class='ci-range'>[3.40, 3.87]</span></td>
+                <td class="text-right">3.55 <span class='ci-range'>[3.31, 3.77]</span></td>
+                <td class="text-right font-mono">23.0 min</td>
+                <td class="text-right font-mono">7.1%</td>
+                <td class="text-right font-mono">15.6%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3010</td>
+                <td><strong>Aarav Pereira</strong> <span class='agent-badge'>(A3010)</span></td>
+                <td>Chat Frontline</td>
+                <td><span class="badge shift-day">Day</span></td>
+                <td class="text-right font-mono">102</td>
+                <td class="text-right">3.69 <span class='ci-range'>[3.48, 3.87]</span></td>
+                <td class="text-right">3.52 <span class='ci-range'>[3.31, 3.69]</span></td>
+                <td class="text-right font-mono">19.0 min</td>
+                <td class="text-right font-mono">10.1%</td>
+                <td class="text-right font-mono">19.0%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3011</td>
+                <td><strong>Divya Jadhav</strong> <span class='agent-badge'>(A3011)</span></td>
+                <td>Chat Frontline</td>
+                <td><span class="badge shift-day">Day</span></td>
+                <td class="text-right font-mono">104</td>
+                <td class="text-right">3.63 <span class='ci-range'>[3.44, 3.82]</span></td>
+                <td class="text-right">3.43 <span class='ci-range'>[3.25, 3.61]</span></td>
+                <td class="text-right font-mono">22.0 min</td>
+                <td class="text-right font-mono">10.4%</td>
+                <td class="text-right font-mono">17.5%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3012</td>
+                <td><strong>Steven Ghosh</strong> <span class='agent-badge'>(A3012)</span></td>
+                <td>Chat Frontline</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td class="text-right font-mono">83</td>
+                <td class="text-right">3.73 <span class='ci-range'>[3.49, 3.98]</span></td>
+                <td class="text-right">3.54 <span class='ci-range'>[3.30, 3.77]</span></td>
+                <td class="text-right font-mono">23.0 min</td>
+                <td class="text-right font-mono">7.3%</td>
+                <td class="text-right font-mono">13.7%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3013</td>
+                <td><strong>Sukhwinder Rao</strong> <span class='agent-badge'>(A3013)</span></td>
+                <td>Chat Frontline</td>
+                <td><span class="badge shift-day">Day</span></td>
+                <td class="text-right font-mono">96</td>
+                <td class="text-right">3.71 <span class='ci-range'>[3.52, 3.89]</span></td>
+                <td class="text-right">3.51 <span class='ci-range'>[3.34, 3.70]</span></td>
+                <td class="text-right font-mono">22.0 min</td>
+                <td class="text-right font-mono">8.2%</td>
+                <td class="text-right font-mono">14.5%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3014</td>
+                <td><strong>Bhavna Joshi</strong> <span class='agent-badge'>(A3014)</span></td>
+                <td>Chat Frontline</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td class="text-right font-mono">78</td>
+                <td class="text-right">3.67 <span class='ci-range'>[3.45, 3.88]</span></td>
+                <td class="text-right">3.37 <span class='ci-range'>[3.13, 3.61]</span></td>
+                <td class="text-right font-mono">20.0 min</td>
+                <td class="text-right font-mono">7.4%</td>
+                <td class="text-right font-mono">12.1%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3015</td>
+                <td><strong>Ishaan Dutta</strong> <span class='agent-badge'>(A3015)</span></td>
+                <td>Chat Frontline</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td class="text-right font-mono">92</td>
+                <td class="text-right">3.65 <span class='ci-range'>[3.46, 3.84]</span></td>
+                <td class="text-right">3.41 <span class='ci-range'>[3.21, 3.62]</span></td>
+                <td class="text-right font-mono">21.0 min</td>
+                <td class="text-right font-mono">8.5%</td>
+                <td class="text-right font-mono">13.5%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3016</td>
+                <td><strong>Om Khanna</strong> <span class='agent-badge'>(A3016)</span></td>
+                <td>Email Frontline</td>
+                <td><span class="badge shift-night">Night</span></td>
+                <td class="text-right font-mono">106</td>
+                <td class="text-right">3.58 <span class='ci-range'>[3.40, 3.75]</span></td>
+                <td class="text-right">3.42 <span class='ci-range'>[3.25, 3.58]</span></td>
+                <td class="text-right font-mono">21.0 min</td>
+                <td class="text-right font-mono">15.1%</td>
+                <td class="text-right font-mono">17.8%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3017</td>
+                <td><strong>Aadhya Rao</strong> <span class='agent-badge'>(A3017)</span></td>
+                <td>Email Frontline</td>
+                <td><span class="badge shift-night">Night</span></td>
+                <td class="text-right font-mono">93</td>
+                <td class="text-right">3.51 <span class='ci-range'>[3.33, 3.69]</span></td>
+                <td class="text-right">3.34 <span class='ci-range'>[3.16, 3.52]</span></td>
+                <td class="text-right font-mono">23.0 min</td>
+                <td class="text-right font-mono">11.1%</td>
+                <td class="text-right font-mono">15.9%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3018</td>
+                <td><strong>Kunal Pillai</strong> <span class='agent-badge'>(A3018)</span></td>
+                <td>Email Frontline</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td class="text-right font-mono">92</td>
+                <td class="text-right">3.78 <span class='ci-range'>[3.59, 3.97]</span></td>
+                <td class="text-right">3.62 <span class='ci-range'>[3.43, 3.83]</span></td>
+                <td class="text-right font-mono">22.0 min</td>
+                <td class="text-right font-mono">9.3%</td>
+                <td class="text-right font-mono">16.3%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3019</td>
+                <td><strong>Sai Joshi</strong> <span class='agent-badge'>(A3019)</span></td>
+                <td>Email Frontline</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td class="text-right font-mono">125</td>
+                <td class="text-right">3.66 <span class='ci-range'>[3.51, 3.82]</span></td>
+                <td class="text-right">3.50 <span class='ci-range'>[3.36, 3.64]</span></td>
+                <td class="text-right font-mono">22.0 min</td>
+                <td class="text-right font-mono">10.4%</td>
+                <td class="text-right font-mono">15.4%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3020</td>
+                <td><strong>Riya Pillai</strong> <span class='agent-badge'>(A3020)</span></td>
+                <td>Email Frontline</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td class="text-right font-mono">101</td>
+                <td class="text-right">3.50 <span class='ci-range'>[3.29, 3.69]</span></td>
+                <td class="text-right">3.32 <span class='ci-range'>[3.11, 3.53]</span></td>
+                <td class="text-right font-mono">23.0 min</td>
+                <td class="text-right font-mono">9.2%</td>
+                <td class="text-right font-mono">23.2%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3021</td>
+                <td><strong>Geeta Sen</strong> <span class='agent-badge'>(A3021)</span></td>
+                <td>Email Frontline</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td class="text-right font-mono">113</td>
+                <td class="text-right">3.64 <span class='ci-range'>[3.45, 3.81]</span></td>
+                <td class="text-right">3.49 <span class='ci-range'>[3.31, 3.69]</span></td>
+                <td class="text-right font-mono">24.0 min</td>
+                <td class="text-right font-mono">13.7%</td>
+                <td class="text-right font-mono">17.3%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3022</td>
+                <td><strong>Manpreet Yadav</strong> <span class='agent-badge'>(A3022)</span></td>
+                <td>Email Frontline</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td class="text-right font-mono">97</td>
+                <td class="text-right">3.54 <span class='ci-range'>[3.36, 3.71]</span></td>
+                <td class="text-right">3.30 <span class='ci-range'>[3.11, 3.49]</span></td>
+                <td class="text-right font-mono">23.0 min</td>
+                <td class="text-right font-mono">10.4%</td>
+                <td class="text-right font-mono">16.0%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3023</td>
+                <td><strong>Meera Patel</strong> <span class='agent-badge'>(A3023)</span></td>
+                <td>Voice Frontline</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td class="text-right font-mono">43</td>
+                <td class="text-right">3.65 <span class='ci-range'>[3.35, 3.93]</span></td>
+                <td class="text-right">3.42 <span class='ci-range'>[3.11, 3.72]</span></td>
+                <td class="text-right font-mono">20.0 min</td>
+                <td class="text-right font-mono">0.0%</td>
+                <td class="text-right font-mono">13.5%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3024</td>
+                <td><strong>Suresh Sethi</strong> <span class='agent-badge'>(A3024)</span></td>
+                <td>Voice Frontline</td>
+                <td><span class="badge shift-day">Day</span></td>
+                <td class="text-right font-mono">202</td>
+                <td class="text-right">3.55 <span class='ci-range'>[3.42, 3.69]</span></td>
+                <td class="text-right">3.39 <span class='ci-range'>[3.26, 3.53]</span></td>
+                <td class="text-right font-mono">21.0 min</td>
+                <td class="text-right font-mono">4.9%</td>
+                <td class="text-right font-mono">14.1%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3025</td>
+                <td><strong>Ananya Das</strong> <span class='agent-badge'>(A3025)</span></td>
+                <td>Voice Frontline</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td class="text-right font-mono">51</td>
+                <td class="text-right">3.69 <span class='ci-range'>[3.41, 3.94]</span></td>
+                <td class="text-right">3.49 <span class='ci-range'>[3.19, 3.73]</span></td>
+                <td class="text-right font-mono">24.0 min</td>
+                <td class="text-right font-mono">2.6%</td>
+                <td class="text-right font-mono">13.7%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3026</td>
+                <td><strong>Suresh Pereira</strong> <span class='agent-badge'>(A3026)</span></td>
+                <td>Voice Frontline</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td class="text-right font-mono">41</td>
+                <td class="text-right">3.49 <span class='ci-range'>[3.15, 3.83]</span></td>
+                <td class="text-right">3.29 <span class='ci-range'>[2.96, 3.62]</span></td>
+                <td class="text-right font-mono">24.0 min</td>
+                <td class="text-right font-mono">4.0%</td>
+                <td class="text-right font-mono">10.9%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3027</td>
+                <td><strong>Harpreet Goyal</strong> <span class='agent-badge'>(A3027)</span></td>
+                <td>Logistics</td>
+                <td><span class="badge shift-day">Day</span></td>
+                <td class="text-right font-mono">210</td>
+                <td class="text-right">3.31 <span class='ci-range'>[3.17, 3.43]</span></td>
+                <td class="text-right">3.42 <span class='ci-range'>[3.30, 3.55]</span></td>
+                <td class="text-right font-mono">1468.0 min</td>
+                <td class="text-right font-mono">7.2%</td>
+                <td class="text-right font-mono">14.2%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3028</td>
+                <td><strong>Vivaan Pandey</strong> <span class='agent-badge'>(A3028)</span></td>
+                <td>Logistics</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td class="text-right font-mono">153</td>
+                <td class="text-right">3.14 <span class='ci-range'>[2.98, 3.29]</span></td>
+                <td class="text-right">3.21 <span class='ci-range'>[3.05, 3.38]</span></td>
+                <td class="text-right font-mono">1463.0 min</td>
+                <td class="text-right font-mono">10.7%</td>
+                <td class="text-right font-mono">11.5%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3029</td>
+                <td><strong>Kavya Pandey</strong> <span class='agent-badge'>(A3029)</span> <span class='sub-note text-amber'>[Logistics duplicate name]</span></td>
+                <td>Logistics</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td class="text-right font-mono">159</td>
+                <td class="text-right">3.13 <span class='ci-range'>[2.97, 3.27]</span></td>
+                <td class="text-right">3.22 <span class='ci-range'>[3.06, 3.37]</span></td>
+                <td class="text-right font-mono">1465.5 min</td>
+                <td class="text-right font-mono">7.9%</td>
+                <td class="text-right font-mono">14.4%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3030</td>
+                <td><strong>Geeta Iyer</strong> <span class='agent-badge'>(A3030)</span></td>
+                <td>Logistics</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td class="text-right font-mono">149</td>
+                <td class="text-right">3.19 <span class='ci-range'>[3.05, 3.32]</span></td>
+                <td class="text-right">3.30 <span class='ci-range'>[3.15, 3.46]</span></td>
+                <td class="text-right font-mono">1466.0 min</td>
+                <td class="text-right font-mono">13.4%</td>
+                <td class="text-right font-mono">15.8%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3031</td>
+                <td><strong>Zoya Menon</strong> <span class='agent-badge'>(A3031)</span></td>
+                <td>Logistics</td>
+                <td><span class="badge shift-day">Day</span></td>
+                <td class="text-right font-mono">210</td>
+                <td class="text-right">3.31 <span class='ci-range'>[3.19, 3.43]</span></td>
+                <td class="text-right">3.42 <span class='ci-range'>[3.28, 3.56]</span></td>
+                <td class="text-right font-mono">1465.5 min</td>
+                <td class="text-right font-mono">6.2%</td>
+                <td class="text-right font-mono">14.1%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3032</td>
+                <td><strong>Kunal Jain</strong> <span class='agent-badge'>(A3032)</span></td>
+                <td>Billing</td>
+                <td><span class="badge shift-day">Day</span></td>
+                <td class="text-right font-mono">167</td>
+                <td class="text-right">3.42 <span class='ci-range'>[3.26, 3.58]</span></td>
+                <td class="text-right">3.26 <span class='ci-range'>[3.11, 3.41]</span></td>
+                <td class="text-right font-mono">22.0 min</td>
+                <td class="text-right font-mono">9.5%</td>
+                <td class="text-right font-mono">12.6%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3033</td>
+                <td><strong>Thomas Reddy</strong> <span class='agent-badge'>(A3033)</span></td>
+                <td>Billing</td>
+                <td><span class="badge shift-day">Day</span></td>
+                <td class="text-right font-mono">151</td>
+                <td class="text-right">3.65 <span class='ci-range'>[3.49, 3.80]</span></td>
+                <td class="text-right">3.50 <span class='ci-range'>[3.36, 3.65]</span></td>
+                <td class="text-right font-mono">21.0 min</td>
+                <td class="text-right font-mono">6.5%</td>
+                <td class="text-right font-mono">14.8%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3034</td>
+                <td><strong>Meera Pereira</strong> <span class='agent-badge'>(A3034)</span></td>
+                <td>Billing</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td class="text-right font-mono">162</td>
+                <td class="text-right">3.42 <span class='ci-range'>[3.27, 3.56]</span></td>
+                <td class="text-right">3.26 <span class='ci-range'>[3.10, 3.40]</span></td>
+                <td class="text-right font-mono">21.0 min</td>
+                <td class="text-right font-mono">10.6%</td>
+                <td class="text-right font-mono">10.8%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3035</td>
+                <td><strong>Nisha Rao</strong> <span class='agent-badge'>(A3035)</span></td>
+                <td>Billing</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td class="text-right font-mono">193</td>
+                <td class="text-right">3.44 <span class='ci-range'>[3.29, 3.60]</span></td>
+                <td class="text-right">3.28 <span class='ci-range'>[3.12, 3.42]</span></td>
+                <td class="text-right font-mono">22.0 min</td>
+                <td class="text-right font-mono">11.5%</td>
+                <td class="text-right font-mono">12.9%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3036</td>
+                <td><strong>Divya Tiwari</strong> <span class='agent-badge'>(A3036)</span></td>
+                <td>Returns Desk</td>
+                <td><span class="badge shift-day">Day</span></td>
+                <td class="text-right font-mono">106</td>
+                <td class="text-right">3.29 <span class='ci-range'>[3.10, 3.49]</span></td>
+                <td class="text-right">3.44 <span class='ci-range'>[3.24, 3.63]</span></td>
+                <td class="text-right font-mono">1465.5 min</td>
+                <td class="text-right font-mono">10.5%</td>
+                <td class="text-right font-mono">19.5%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3037</td>
+                <td><strong>Mohammed Desai</strong> <span class='agent-badge'>(A3037)</span></td>
+                <td>Returns Desk</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td class="text-right font-mono">243</td>
+                <td class="text-right">3.28 <span class='ci-range'>[3.15, 3.40]</span></td>
+                <td class="text-right">3.40 <span class='ci-range'>[3.27, 3.53]</span></td>
+                <td class="text-right font-mono">1473.0 min</td>
+                <td class="text-right font-mono">10.1%</td>
+                <td class="text-right font-mono">15.7%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3038</td>
+                <td><strong>Varun Reddy</strong> <span class='agent-badge'>(A3038)</span></td>
+                <td>Returns Desk</td>
+                <td><span class="badge shift-day">Day</span></td>
+                <td class="text-right font-mono">120</td>
+                <td class="text-right">3.21 <span class='ci-range'>[3.04, 3.37]</span></td>
+                <td class="text-right">3.28 <span class='ci-range'>[3.11, 3.45]</span></td>
+                <td class="text-right font-mono">1467.0 min</td>
+                <td class="text-right font-mono">6.4%</td>
+                <td class="text-right font-mono">13.9%</td>
+            </tr>
+            
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Block 2: Tier 1 Hardware Triage Rota -->
+        <div class="section-header-block" style="border-left-color: #d97706; margin-top: 28px;">
+            Block 2: Tier 1 Hardware Triage Rota (4 Agents) &mdash; High HW Defect Volume (39%&ndash;41% Group a Share) | Group Mean CSAT: Raw 3.01 | Adjusted 3.12
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Agent ID</th>
+                        <th>Agent Name</th>
+                        <th>Assigned Team</th>
+                        <th>Shift</th>
+                        <th class="text-right">n CSAT</th>
+                        <th class="text-right">Raw CSAT [95% CI]</th>
+                        <th class="text-right">Mix-Adjusted CSAT [95% CI]</th>
+                        <th class="text-right">Median Handle Time</th>
+                        <th class="text-right">SLA Breach %</th>
+                        <th class="text-right">Group (a) Share</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+            <tr class="">
+                <td class="font-mono text-bold">A3004</td>
+                <td><strong>Siddharth Kapoor</strong> <span class='agent-badge'>(A3004)</span></td>
+                <td>Chat Frontline</td>
+                <td><span class="badge shift-day">Day</span></td>
+                <td class="text-right font-mono">129</td>
+                <td class="text-right">2.98 <span class='ci-range'>[2.79, 3.19]</span></td>
+                <td class="text-right">3.08 <span class='ci-range'>[2.91, 3.24]</span></td>
+                <td class="text-right font-mono">26.0 min</td>
+                <td class="text-right font-mono">8.5%</td>
+                <td class="text-right font-mono">41.0%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3005</td>
+                <td><strong>Zaid Khanna</strong> <span class='agent-badge'>(A3005)</span></td>
+                <td>Chat Frontline</td>
+                <td><span class="badge shift-day">Day</span></td>
+                <td class="text-right font-mono">118</td>
+                <td class="text-right">3.04 <span class='ci-range'>[2.81, 3.26]</span></td>
+                <td class="text-right">3.15 <span class='ci-range'>[2.97, 3.33]</span></td>
+                <td class="text-right font-mono">25.0 min</td>
+                <td class="text-right font-mono">8.4%</td>
+                <td class="text-right font-mono">38.9%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3006</td>
+                <td><strong>Kavya Pandey</strong> <span class='agent-badge'>(A3006)</span> <span class='sub-note text-amber'>[Triage Rota duplicate name]</span></td>
+                <td>Chat Frontline</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td class="text-right font-mono">142</td>
+                <td class="text-right">3.01 <span class='ci-range'>[2.79, 3.21]</span></td>
+                <td class="text-right">3.13 <span class='ci-range'>[2.95, 3.30]</span></td>
+                <td class="text-right font-mono">27.0 min</td>
+                <td class="text-right font-mono">8.9%</td>
+                <td class="text-right font-mono">39.1%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3007</td>
+                <td><strong>Siddharth Trivedi</strong> <span class='agent-badge'>(A3007)</span></td>
+                <td>Chat Frontline</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td class="text-right font-mono">120</td>
+                <td class="text-right">3.01 <span class='ci-range'>[2.80, 3.23]</span></td>
+                <td class="text-right">3.10 <span class='ci-range'>[2.93, 3.28]</span></td>
+                <td class="text-right font-mono">27.0 min</td>
+                <td class="text-right font-mono">5.8%</td>
+                <td class="text-right font-mono">38.8%</td>
+            </tr>
+            
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Block 3: Tier 2 Escalations & Warranty -->
+        <div class="section-header-block" style="border-left-color: #7c3aed; margin-top: 28px;">
+            Block 3: Tier 2 Escalations &amp; Warranty (6 Agents) &mdash; Multi-Day Warranty Inquiries (Median Handle Time in Days) | Group Mean CSAT: Raw 2.58 | Adjusted 3.07
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Agent ID</th>
+                        <th>Agent Name</th>
+                        <th>Assigned Team</th>
+                        <th>Shift</th>
+                        <th class="text-right">n CSAT</th>
+                        <th class="text-right">Raw CSAT [95% CI]</th>
+                        <th class="text-right">Mix-Adjusted CSAT [95% CI]</th>
+                        <th class="text-right">Median Handle Time (Days)</th>
+                        <th class="text-right">SLA Breach %</th>
+                        <th class="text-right">Group (a) Share</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+            <tr class="">
+                <td class="font-mono text-bold">A3039</td>
+                <td><strong>Sameer Ghosh</strong> <span class='agent-badge'>(A3039)</span></td>
+                <td>Escalations &amp; Warranty</td>
+                <td><span class="badge shift-day">Day</span></td>
+                <td class="text-right font-mono">114</td>
+                <td class="text-right">2.82 <span class='ci-range'>[2.61, 3.03]</span></td>
+                <td class="text-right">3.23 <span class='ci-range'>[3.05, 3.42]</span></td>
+                <td class="text-right font-mono"><strong>5.1 days</strong> <span class='sub-note'>(7282m)</span></td>
+                <td class="text-right font-mono">8.9%</td>
+                <td class="text-right font-mono">39.5%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3040</td>
+                <td><strong>Tarun Fernandes</strong> <span class='agent-badge'>(A3040)</span></td>
+                <td>Escalations &amp; Warranty</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td class="text-right font-mono">96</td>
+                <td class="text-right">2.55 <span class='ci-range'>[2.31, 2.79]</span></td>
+                <td class="text-right">3.10 <span class='ci-range'>[2.88, 3.32]</span></td>
+                <td class="text-right font-mono"><strong>3.1 days</strong> <span class='sub-note'>(4525m)</span></td>
+                <td class="text-right font-mono">5.9%</td>
+                <td class="text-right font-mono">62.6%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3041</td>
+                <td><strong>Jaspreet Desai</strong> <span class='agent-badge'>(A3041)</span></td>
+                <td>Escalations &amp; Warranty</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td class="text-right font-mono">89</td>
+                <td class="text-right">2.42 <span class='ci-range'>[2.20, 2.62]</span></td>
+                <td class="text-right">2.87 <span class='ci-range'>[2.70, 3.06]</span></td>
+                <td class="text-right font-mono"><strong>5.1 days</strong> <span class='sub-note'>(7291m)</span></td>
+                <td class="text-right font-mono">10.0%</td>
+                <td class="text-right font-mono">59.5%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3042</td>
+                <td><strong>Sneha Sethi</strong> <span class='agent-badge'>(A3042)</span></td>
+                <td>Escalations &amp; Warranty</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td class="text-right font-mono">91</td>
+                <td class="text-right">2.44 <span class='ci-range'>[2.20, 2.68]</span></td>
+                <td class="text-right">2.98 <span class='ci-range'>[2.78, 3.21]</span></td>
+                <td class="text-right font-mono"><strong>3.1 days</strong> <span class='sub-note'>(4522m)</span></td>
+                <td class="text-right font-mono">9.5%</td>
+                <td class="text-right font-mono">58.7%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3043</td>
+                <td><strong>Kabir Varghese</strong> <span class='agent-badge'>(A3043)</span></td>
+                <td>Escalations &amp; Warranty</td>
+                <td><span class="badge shift-morning">Morning</span></td>
+                <td class="text-right font-mono">88</td>
+                <td class="text-right">2.60 <span class='ci-range'>[2.38, 2.83]</span></td>
+                <td class="text-right">3.09 <span class='ci-range'>[2.88, 3.30]</span></td>
+                <td class="text-right font-mono"><strong>5.1 days</strong> <span class='sub-note'>(7309m)</span></td>
+                <td class="text-right font-mono">9.5%</td>
+                <td class="text-right font-mono">57.8%</td>
+            </tr>
+            
+            <tr class="">
+                <td class="font-mono text-bold">A3044</td>
+                <td><strong>Pranav Khanna</strong> <span class='agent-badge'>(A3044)</span></td>
+                <td>Escalations &amp; Warranty</td>
+                <td><span class="badge shift-day">Day</span></td>
+                <td class="text-right font-mono">105</td>
+                <td class="text-right">2.57 <span class='ci-range'>[2.35, 2.79]</span></td>
+                <td class="text-right">3.08 <span class='ci-range'>[2.92, 3.24]</span></td>
+                <td class="text-right font-mono"><strong>4.1 days</strong> <span class='sub-note'>(5838m)</span></td>
+                <td class="text-right font-mono">8.0%</td>
+                <td class="text-right font-mono">49.0%</td>
+            </tr>
+            
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- SECTION 4: SLA Breach Breakdown -->
+    <section class="card">
+        <div class="card-title">
+            <span>4. SLA First-Response Breach Breakdown by Site &amp; Shift</span>
+            <span class="badge" style="background:#f1f5f9; color:#475569;">Targets: Chat 15m, Voice 2h, Social 4h, Email 8h</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+            <!-- By Shift -->
+            <div>
+                <h4 style="font-size: 13px; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 8px;">A. By Shift</h4>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Shift</th>
+                                <th class="text-right">Total Tickets</th>
+                                <th class="text-right">Breaches</th>
+                                <th class="text-right">Breach Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        
+                            <tr>
+                                <td><span class="badge shift-day">Day</span></td>
+                                <td class="text-right font-mono">4,614</td>
+                                <td class="text-right font-mono">362</td>
+                                <td class="text-right font-mono font-bold">7.8%</td>
+                            </tr>
+                        
+                            <tr>
+                                <td><span class="badge shift-morning">Morning</span></td>
+                                <td class="text-right font-mono">6,079</td>
+                                <td class="text-right font-mono">562</td>
+                                <td class="text-right font-mono font-bold">9.2%</td>
+                            </tr>
+                        
+                            <tr>
+                                <td><span class="badge shift-night">Night</span></td>
+                                <td class="text-right font-mono">1,017</td>
+                                <td class="text-right font-mono">137</td>
+                                <td class="text-right font-mono font-bold">13.5%</td>
+                            </tr>
+                        
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- By Site -->
+            <div>
+                <h4 style="font-size: 13px; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 8px;">B. By Operating Site</h4>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Site</th>
+                                <th class="text-right">Total Tickets</th>
+                                <th class="text-right">Breaches</th>
+                                <th class="text-right">Breach Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        
+                            <tr>
+                                <td class="font-bold">Bengaluru</td>
+                                <td class="text-right font-mono">7,504</td>
+                                <td class="text-right font-mono">658</td>
+                                <td class="text-right font-mono font-bold">8.8%</td>
+                            </tr>
+                        
+                            <tr>
+                                <td class="font-bold">Indore</td>
+                                <td class="text-right font-mono">4,206</td>
+                                <td class="text-right font-mono">403</td>
+                                <td class="text-right font-mono font-bold">9.6%</td>
+                            </tr>
+                        
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- By Site & Shift Cross-Tab -->
+            <div style="grid-column: 1 / -1;">
+                <h4 style="font-size: 13px; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 8px;">C. Site &times; Shift Cross-Tabulation</h4>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Site</th>
+                                <th>Shift</th>
+                                <th class="text-right">Total Tickets</th>
+                                <th class="text-right">Breaches</th>
+                                <th class="text-right">Breach Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        
+                            <tr>
+                                <td class="font-bold">Bengaluru</td>
+                                <td><span class="badge shift-day">Day</span></td>
+                                <td class="text-right font-mono">3,913</td>
+                                <td class="text-right font-mono">294</td>
+                                <td class="text-right font-mono font-bold">7.5%</td>
+                            </tr>
+                        
+                            <tr>
+                                <td class="font-bold">Bengaluru</td>
+                                <td><span class="badge shift-morning">Morning</span></td>
+                                <td class="text-right font-mono">3,591</td>
+                                <td class="text-right font-mono">364</td>
+                                <td class="text-right font-mono font-bold">10.1%</td>
+                            </tr>
+                        
+                            <tr>
+                                <td class="font-bold">Indore</td>
+                                <td><span class="badge shift-day">Day</span></td>
+                                <td class="text-right font-mono">701</td>
+                                <td class="text-right font-mono">68</td>
+                                <td class="text-right font-mono font-bold">9.7%</td>
+                            </tr>
+                        
+                            <tr>
+                                <td class="font-bold">Indore</td>
+                                <td><span class="badge shift-morning">Morning</span></td>
+                                <td class="text-right font-mono">2,488</td>
+                                <td class="text-right font-mono">198</td>
+                                <td class="text-right font-mono font-bold">8.0%</td>
+                            </tr>
+                        
+                            <tr>
+                                <td class="font-bold">Indore</td>
+                                <td><span class="badge shift-night">Night</span></td>
+                                <td class="text-right font-mono">1,017</td>
+                                <td class="text-right font-mono">137</td>
+                                <td class="text-right font-mono font-bold">13.5%</td>
+                            </tr>
+                        
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 5: Text-Reader Accuracy -->
+    <section class="card">
+        <div class="card-title">
+            <span>5. Rule-Based Text Reader Accuracy &amp; Audit Status</span>
+            <span class="badge" style="background:#f8fafc; color:#64748b;">Extraction Pipeline</span>
+        </div>
+        
+        <div class="pending-card">
+            <div class="pending-badge">PENDING</div>
+            <div>
+                <h4 class="text-slate-800 font-bold mb-1">Human Annotation & Test Set Evaluation</h4>
+                <p class="text-slate-600 text-sm mb-0">
+                    A fixed exploratory sample of 80 tickets was exported to <code>data/label_sample.csv</code>.
+                    Automated evaluation against verified ground-truth labels is currently pending reviewer submission.
+                    Once completed, results will automatically compile to <code>output/eval_results.json</code>.
+                </p>
+            </div>
+        </div>
+        
+    </section>
+
+    <!-- SECTION 6: Known Limitations & Honesty Log -->
+    <section class="card">
+        <div class="card-title">
+            <span>6. Known Limitations &amp; Methodological Caveats (from NOTES.md)</span>
+            <span class="badge" style="background:#fef2f2; color:#b91c1c;">Audit Log</span>
+        </div>
+        
+        <div class="limitations-list">
+            <div class="limitations-item">
+                <strong>1. Refund-Notes Exposure (Rs 19 &ndash; 36 Lakh)</strong>
+                Approximately 1,000 tickets have agent notes recording refund initiation while <code>refund_amount_inr</code> is blank. Valuation indicates an estimated rupee exposure of Rs 19.2&ndash;36.0 Lakh (Mid-Case: Rs 31.6 Lakh). Crucially, audit confirms these represent customers' own paid money (order cancellations, delivery failures, duplicate charges, return QC delays) rather than vendor replacement losses.
+            </div>
+
+            <div class="limitations-item">
+                <strong>2. Bot Category Tagging Errors (13% &ndash; 20%)</strong>
+                Audit of ticket text reveals that bot-assigned categories misclassify 13.3% to 20.0% of inquiries (e.g. charging and hardware failures mislabelled as 'Audio Quality', or delivery transit failures tagged as 'Other').
+            </div>
+
+            <div class="limitations-item">
+                <strong>3. Structured vs. Text Action Discrepancies</strong>
+                12.3% of tickets (1,445 / 11,750) note replacements dispatched in agent notes while <code>replacement_issued == 'N'</code>. Conversely, 8.9% note refunds while monetary fields are blank.
+            </div>
+
+            <div class="limitations-item">
+                <strong>4. Lot Code Absence in Free-Text</strong>
+                Lot and batch numbers appear in 0.00% of customer messages or agent notes (0/2,571 tickets). Lot identification is discoverable strictly via structured order linkages.
+            </div>
+
+            <div class="limitations-item">
+                <strong>5. Non-Comparability of Tier 2</strong>
+                Tier 2 handles multi-day escalations (median handle time 3.1 to 5.1 days vs. 20–27 minutes for Tier 1 frontline chat). Comparing Tier 2 agents against frontline baselines violates policy and operational reality.
+            </div>
+
+            <div class="limitations-item">
+                <strong>6. Chronological Order Date Nuance</strong>
+                In 175 tickets joined by <code>order_id</code>, <code>order_date > created_at</code> (primarily pilot/seeding units or system logging quirks). Excluding them changes group replacement rates by &le; 0.30 pts and CSAT by &le; 0.014 pts, well below significant thresholds.
+            </div>
+
+            <div class="limitations-item">
+                <strong>7. Agent Ranking & Queue Placement</strong>
+                Individual ranks cannot reliably identify who needs training. Within their own teams, only 1 of 30 agents differs from the team mean (1.5 expected by chance). Split-half reliability (<em>r</em> = 0.456) was computed across teams, so it includes consistent team differences. Agents A3028 and A3029 are indistinguishable from Logistics peers; the team as a whole scores lower after adjustment (3.32 vs Chat 3.46), which is a queue/process effect.
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        Generated automatically by <code>src/dashboard.py</code> &bull; Vireo Support-Ticket Root-Cause Analysis &bull; Pinned Requirements: pandas, numpy
+    </footer>
+
+</div>
+
+</body>
+</html>
