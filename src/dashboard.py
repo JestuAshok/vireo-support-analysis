@@ -303,7 +303,7 @@ def build_dashboard():
             row_style = " style='background:#fefce8;'" if aid in ["A3028", "A3029"] else ""
             aid_label = f"<strong>{aid}</strong>"
             if aid in ["A3028", "A3029"]:
-                aid_label += " <span class='badge' style='background:#fef08a; color:#854d0e;'>Audit Focus</span>"
+                aid_label += " <span class='badge' style='background:#fef08a; color:#854d0e;'>Compared with team peers</span>"
                 
             t_rows.append(f"""
             <tr{row_style}>
@@ -404,11 +404,15 @@ def build_dashboard():
             sym_acc = overall.get("symptom", {}).get("accuracy", 0.0)
             repl = eval_data.get("binary_metrics", {}).get("replacement_of_faulty_unit", {})
             rfnd = eval_data.get("binary_metrics", {}).get("refund", {})
+            wrong_cases = eval_data.get("wrong_cases", [])
+            n_wrong_act = sum(1 for w in wrong_cases if w.get("type") == "action")
+            n_wrong_sym = sum(1 for w in wrong_cases if w.get("type") == "symptom")
+
             accuracy_content = f"""
             <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 18px 22px;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                    <strong style="color: #166534; font-size: 15px;">Text Extraction Model Evaluation (n = {eval_data.get('n_total', 80)})</strong>
-                    <span class="badge" style="background: #dcfce7; color: #15803d; border: 1px solid #86efac;">VALIDATED</span>
+                    <strong style="color: #166534; font-size: 14.5px;">Hand-labelled sample: 40 tickets scored for action (20 Pulse 2, 20 other), 20 Pulse 2 tickets for symptom</strong>
+                    <span class="badge" style="background: #fef08a; color: #854d0e; border: 1px solid #fde047;">SPOT-CHECKED (small sample)</span>
                 </div>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
                     <div style="background: #ffffff; padding: 12px; border-radius: 6px; border: 1px solid #bbf7d0;">
@@ -417,7 +421,7 @@ def build_dashboard():
                         <div style="font-size: 11px; color: #64748b;">Wilson CI: [{overall.get('action', {}).get('ci_low', 0.0):.1%}, {overall.get('action', {}).get('ci_high', 0.0):.1%}]</div>
                     </div>
                     <div style="background: #ffffff; padding: 12px; border-radius: 6px; border: 1px solid #bbf7d0;">
-                        <div style="font-size: 11px; text-transform: uppercase; color: #64748b;">Symptom Accuracy</div>
+                        <div style="font-size: 11px; text-transform: uppercase; color: #64748b;">Symptom Accuracy (Pulse 2)</div>
                         <div style="font-size: 18px; font-weight: 800; color: #166534;">{sym_acc:.1%}</div>
                         <div style="font-size: 11px; color: #64748b;">Wilson CI: [{overall.get('symptom', {}).get('ci_low', 0.0):.1%}, {overall.get('symptom', {}).get('ci_high', 0.0):.1%}]</div>
                     </div>
@@ -432,6 +436,10 @@ def build_dashboard():
                         <div style="font-size: 11px; color: #64748b;">F1-Score: {rfnd.get('f1', 0.0):.3f}</div>
                     </div>
                 </div>
+            </div>
+            <div style="margin-top: 14px; font-size: 13px; color: #475569; line-height: 1.55; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 16px;">
+                <strong>Wrong cases by type:</strong> {n_wrong_act} action, {n_wrong_sym} symptom.<br>
+                Known failure: a note saying the customer declined a replacement and got a refund is read as a replacement (2 cases). One missed replacement and one missed connectivity ticket. Not tested: lost-parcel reshipments (none in the sample). 13 of 20 Pulse 2 tickets were 'other', so the symptom score is easy; one-side-not-charging scored 5/5. Rules were written from the full dataset, so this is not a held-out test, and there was one labeller.
             </div>
             """
         except Exception:
@@ -817,14 +825,10 @@ def build_dashboard():
                     (Total Group a breaches in Q1: 160 breaches = Rs 0.56 Lakh)
                 </div>
             </div>
+        </div>
 
-            <div class="stat-box">
-                <div class="stat-label">Total Attributable Cost (Q1)</div>
-                <div class="stat-value" style="color: #0f172a;">Rs 9.6 &ndash; 11.2 Lakh</div>
-                <div class="stat-sub">
-                    Sum of replacement units (Rs 7.1&ndash;8.8L) + extra contacts (Rs 2.2L) + SLA penalties (Rs 0.26L).
-                </div>
-            </div>
+        <div style="margin-top: 14px; font-size: 13px; color: #64748b; padding-left: 2px;">
+            <strong>Total Attributable Cost (Q1):</strong> Rs 9.6 &ndash; 11.2 Lakh (Sum of replacement units Rs 7.1&ndash;8.8L + extra contacts Rs 2.20L + SLA penalties Rs 0.26L).
         </div>
     </section>
 
@@ -1153,8 +1157,8 @@ def build_dashboard():
             </div>
 
             <div class="limitations-item">
-                <strong>2. Bot Category Tagging Errors (13% &ndash; 20%)</strong>
-                Audit of ticket text reveals that bot-assigned categories misclassify 13.3% to 20.0% of inquiries (e.g. charging and hardware failures mislabelled as 'Audio Quality', or delivery transit failures tagged as 'Other').
+                <strong>2. Bot Category Tagging Errors (13-20% in a 30-ticket read)</strong>
+                Audit of ticket text reveals that bot-assigned categories misclassify 13-20% in a 30-ticket read (e.g. charging and hardware failures mislabelled as 'Audio Quality', or delivery transit failures tagged as 'Other').
             </div>
 
             <div class="limitations-item">

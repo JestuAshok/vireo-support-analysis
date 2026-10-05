@@ -363,14 +363,10 @@
                     (Total Group a breaches in Q1: 160 breaches = Rs 0.56 Lakh)
                 </div>
             </div>
+        </div>
 
-            <div class="stat-box">
-                <div class="stat-label">Total Attributable Cost (Q1)</div>
-                <div class="stat-value" style="color: #0f172a;">Rs 9.6 &ndash; 11.2 Lakh</div>
-                <div class="stat-sub">
-                    Sum of replacement units (Rs 7.1&ndash;8.8L) + extra contacts (Rs 2.2L) + SLA penalties (Rs 0.26L).
-                </div>
-            </div>
+        <div style="margin-top: 14px; font-size: 13px; color: #64748b; padding-left: 2px;">
+            <strong>Total Attributable Cost (Q1):</strong> Rs 9.6 &ndash; 11.2 Lakh (Sum of replacement units Rs 7.1&ndash;8.8L + extra contacts Rs 2.20L + SLA penalties Rs 0.26L).
         </div>
     </section>
 
@@ -875,7 +871,7 @@
             </tr>
             
             <tr style='background:#fefce8;'>
-                <td class="font-mono"><strong>A3028</strong> <span class='badge' style='background:#fef08a; color:#854d0e;'>Audit Focus</span></td>
+                <td class="font-mono"><strong>A3028</strong> <span class='badge' style='background:#fef08a; color:#854d0e;'>Compared with team peers</span></td>
                 <td>Vivaan Pandey</td>
                 <td class="text-right font-mono">153</td>
                 <td class="text-right">3.14 <span class='ci-range'>[2.98, 3.29]</span></td>
@@ -884,7 +880,7 @@
             </tr>
             
             <tr style='background:#fefce8;'>
-                <td class="font-mono"><strong>A3029</strong> <span class='badge' style='background:#fef08a; color:#854d0e;'>Audit Focus</span></td>
+                <td class="font-mono"><strong>A3029</strong> <span class='badge' style='background:#fef08a; color:#854d0e;'>Compared with team peers</span></td>
                 <td>Kavya Pandey</td>
                 <td class="text-right font-mono">159</td>
                 <td class="text-right">3.13 <span class='ci-range'>[2.97, 3.27]</span></td>
@@ -2040,18 +2036,39 @@
             <span class="badge" style="background:#f8fafc; color:#64748b;">Extraction Pipeline</span>
         </div>
         
-        <div class="pending-card">
-            <div class="pending-badge">PENDING</div>
-            <div>
-                <h4 class="text-slate-800 font-bold mb-1">Human Annotation & Test Set Evaluation</h4>
-                <p class="text-slate-600 text-sm mb-0">
-                    A fixed exploratory sample of 80 tickets was exported to <code>data/label_sample.csv</code>.
-                    Automated evaluation against verified ground-truth labels is currently pending reviewer submission.
-                    Once completed, results will automatically compile to <code>output/eval_results.json</code>.
-                </p>
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 18px 22px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <strong style="color: #166534; font-size: 14.5px;">Hand-labelled sample: 40 tickets scored for action (20 Pulse 2, 20 other), 20 Pulse 2 tickets for symptom</strong>
+                    <span class="badge" style="background: #fef08a; color: #854d0e; border: 1px solid #fde047;">SPOT-CHECKED (small sample)</span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                    <div style="background: #ffffff; padding: 12px; border-radius: 6px; border: 1px solid #bbf7d0;">
+                        <div style="font-size: 11px; text-transform: uppercase; color: #64748b;">Action Accuracy</div>
+                        <div style="font-size: 18px; font-weight: 800; color: #166534;">92.5%</div>
+                        <div style="font-size: 11px; color: #64748b;">Wilson CI: [80.1%, 97.4%]</div>
+                    </div>
+                    <div style="background: #ffffff; padding: 12px; border-radius: 6px; border: 1px solid #bbf7d0;">
+                        <div style="font-size: 11px; text-transform: uppercase; color: #64748b;">Symptom Accuracy (Pulse 2)</div>
+                        <div style="font-size: 18px; font-weight: 800; color: #166534;">95.0%</div>
+                        <div style="font-size: 11px; color: #64748b;">Wilson CI: [76.4%, 99.1%]</div>
+                    </div>
+                    <div style="background: #ffffff; padding: 12px; border-radius: 6px; border: 1px solid #bbf7d0;">
+                        <div style="font-size: 11px; text-transform: uppercase; color: #64748b;">Replacement Prec / Rec</div>
+                        <div style="font-size: 16px; font-weight: 700; color: #1e293b;">80.0% / 88.9%</div>
+                        <div style="font-size: 11px; color: #64748b;">F1-Score: 0.842</div>
+                    </div>
+                    <div style="background: #ffffff; padding: 12px; border-radius: 6px; border: 1px solid #bbf7d0;">
+                        <div style="font-size: 11px; text-transform: uppercase; color: #64748b;">Refund Prec / Rec</div>
+                        <div style="font-size: 16px; font-weight: 700; color: #1e293b;">100.0% / 81.8%</div>
+                        <div style="font-size: 11px; color: #64748b;">F1-Score: 0.900</div>
+                    </div>
+                </div>
             </div>
-        </div>
-        
+            <div style="margin-top: 14px; font-size: 13px; color: #475569; line-height: 1.55; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 16px;">
+                <strong>Wrong cases by type:</strong> 3 action, 1 symptom.<br>
+                Known failure: a note saying the customer declined a replacement and got a refund is read as a replacement (2 cases). One missed replacement and one missed connectivity ticket. Not tested: lost-parcel reshipments (none in the sample). 13 of 20 Pulse 2 tickets were 'other', so the symptom score is easy; one-side-not-charging scored 5/5. Rules were written from the full dataset, so this is not a held-out test, and there was one labeller.
+            </div>
+            
     </section>
 
     <!-- SECTION 6: Known Limitations & Honesty Log -->
@@ -2068,8 +2085,8 @@
             </div>
 
             <div class="limitations-item">
-                <strong>2. Bot Category Tagging Errors (13% &ndash; 20%)</strong>
-                Audit of ticket text reveals that bot-assigned categories misclassify 13.3% to 20.0% of inquiries (e.g. charging and hardware failures mislabelled as 'Audio Quality', or delivery transit failures tagged as 'Other').
+                <strong>2. Bot Category Tagging Errors (13-20% in a 30-ticket read)</strong>
+                Audit of ticket text reveals that bot-assigned categories misclassify 13-20% in a 30-ticket read (e.g. charging and hardware failures mislabelled as 'Audio Quality', or delivery transit failures tagged as 'Other').
             </div>
 
             <div class="limitations-item">

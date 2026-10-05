@@ -1,0 +1,102 @@
+{
+  "patterns_sha256": "3a8b4e45036b080e4ef4f11d0a837313d4c8df4e879d92ae2875e4671c5b0674",
+  "is_frozen_v1": true,
+  "total_sample_size": 80,
+  "scored_sample_size": 40,
+  "n_action_scored": 40,
+  "n_symptom_scored": 20,
+  "strata": {
+    "pulse2": {
+      "action": {
+        "n": 20,
+        "correct": 18,
+        "accuracy": 0.9,
+        "ci_low": 0.6989663547715128,
+        "ci_high": 0.9721335187862318
+      },
+      "symptom": {
+        "n": 20,
+        "correct": 19,
+        "accuracy": 0.95,
+        "ci_low": 0.763868806553258,
+        "ci_high": 0.9911185511992047
+      }
+    },
+    "other": {
+      "action": {
+        "n": 20,
+        "correct": 19,
+        "accuracy": 0.95,
+        "ci_low": 0.763868806553258,
+        "ci_high": 0.9911185511992047
+      },
+      "symptom": {
+        "n": 0,
+        "correct": 0,
+        "accuracy": 0.0,
+        "ci_low": 0.0,
+        "ci_high": 0.0
+      }
+    }
+  },
+  "overall": {
+    "action": {
+      "n": 40,
+      "correct": 37,
+      "accuracy": 0.925,
+      "ci_low": 0.8013576647568946,
+      "ci_high": 0.9741639742254119
+    },
+    "symptom": {
+      "n": 20,
+      "correct": 19,
+      "accuracy": 0.95,
+      "ci_low": 0.763868806553258,
+      "ci_high": 0.9911185511992047
+    }
+  },
+  "binary_metrics": {
+    "replacement_of_faulty_unit": {
+      "tp": 8,
+      "fp": 2,
+      "fn": 1,
+      "precision": 0.8,
+      "recall": 0.8888888888888888,
+      "f1": 0.8421052631578948
+    },
+    "refund": {
+      "tp": 9,
+      "fp": 0,
+      "fn": 2,
+      "precision": 1.0,
+      "recall": 0.8181818181818182,
+      "f1": 0.9
+    }
+  },
+  "wrong_cases": [
+    {
+      "ticket_id": "TK-249264",
+      "type": "action",
+      "rule_label": "none",
+      "ground_truth": "replacement_of_faulty_unit"
+    },
+    {
+      "ticket_id": "TK-248427",
+      "type": "action",
+      "rule_label": "replacement_of_faulty_unit",
+      "ground_truth": "refund"
+    },
+    {
+      "ticket_id": "TK-241570",
+      "type": "action",
+      "rule_label": "replacement_of_faulty_unit",
+      "ground_truth": "refund"
+    },
+    {
+      "ticket_id": "TK-249143",
+      "type": "symptom",
+      "rule_label": "other",
+      "ground_truth": "connectivity"
+    }
+  ]
+}
